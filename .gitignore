@@ -1,0 +1,8 @@
+*~
+*.pyc
+*.sqlite3
+local_settings.py
+*.vagrant
+*.log
+supervisord.pid
+*.lock

@@ -230,7 +230,7 @@ class GenericTicketConnector(object):
             if (ticket):
                 kwargs['Ticket'] = ticket
             if (article):
-                kwargs['Article'] = ticket
+                kwargs['Article'] = article
 
         ret = self.req('TicketUpdate', **kwargs)
         elements = self._unpack_resp_several(ret)

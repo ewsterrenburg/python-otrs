@@ -256,6 +256,25 @@ if not MISSING_VARS:
                         MimeType='text/plain')
             t_id, t_number = self.c.ticket_create(t, a)
 
+            a2 = Article(Subject='UnitTest2', Body='bla', Charset='UTF8',
+                         MimeType='text/plain')
+
+            a3 = Article(Subject='UnitTest3', Body='bla', Charset='UTF8',
+                         MimeType='text/plain')
+
+            self.c.ticket_update(t_id, article=a2)
+            self.c.ticket_update(t_id, article=a3)
+
+            t_upd = self.c.ticket_get(t_id, get_articles=True)
+            arts_upd = t_upd.articles()
+            self.assertIsInstance(arts_upd, list)
+            self.assertEqual(len(arts_upd), 4)
+            self.assertEqual(arts_upd[0].Subject, 'UnitTest')
+            # article 1 is an auto response
+            self.assertEqual(arts_upd[2].Subject, 'UnitTest2')
+            self.assertEqual(arts_upd[3].Subject, 'UnitTest3')
+
+
 
 else:
     print 'Set OTRS_LOGIN and OTRS_PASSWORD env vars if you want "real"'+\

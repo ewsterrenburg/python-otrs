@@ -156,11 +156,20 @@ class GenericTicketConnector(object):
             customer_user_login=user)
 
     @authenticated
-    def ticket_get(self, ticket_id, *args, **kwargs):
+    def ticket_get(self, ticket_id, get_articles=False, *args, **kwargs):
         """ Get a ticket by id ; beware, TicketID != TicketNumber
+
+        @param ticket_id : the TicketID of the ticket
+        @param get_articles : grab articles linked to the ticket
+
+        @return a `Ticket`, Ticket.articles() will give articles if relevant.
         """
         params = {'TicketID' : str(ticket_id)}
         params.update(kwargs)
+        if get_articles:
+            params['AllArticles'] = True
+
+
         ret = self.req('TicketGet', **params)
         return Ticket.from_xml(self._unpack_resp_one(ret))
 

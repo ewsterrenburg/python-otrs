@@ -181,15 +181,13 @@ if not MISSING_VARS:
             self.assertEqual(t.StateType, 'closed')
 
         def test_ticket_get_with_articles(self):
-            res = self.c.ticket_get(32, get_articles=True)
-            self.assertIsInstance(res, (list, tuple))
-            self.assertEqual(len(res), 2)
-            ticket, articles = res
+            t = self.c.ticket_get(32, get_articles=True)
             self.assertEqual(t.TicketID, 32)
             self.assertEqual(t.StateType, 'closed')
+            articles = t.articles()
             self.assertIsInstance(articles, (list, tuple))
             self.assertIsInstance(articles[0], Article)
-
+            self.assertEqual(articles[0].SenderType, 'customer')
 
         def test_ticket_search(self):
             t_list = self.c.ticket_search(CustomerID=9)

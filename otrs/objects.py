@@ -1,21 +1,49 @@
 import xml.etree.ElementTree as etree
 
 class OTRSObject(object):
+    CHILD_MAP = {}
+
     def __init__(self, *args, **kwargs):
         self.attrs = kwargs
+        self.childs = {}
 
     def __getattr__(self, k):
         return autocast(self.attrs[k])
 
     @classmethod
     def from_xml(cls, xml_element):
+        child_tags = cls.CHILD_MAP.keys()
+
         if not xml_element.tag.endswith(cls.XML_NAME):
             raise ValueError(
                 'xml_element should be a {} node, not {}'.format(
                     cls.XML_NAME, xml_element.tag))
-        attrs = {extract_tagname(t): t.text for t in xml_element.getchildren()}
+        attrs = {}
+        childs = []
+        for t in xml_element.getchildren():
+            name = extract_tagname(t)
+            if name in child_tags:
+                SubClass = cls.CHILD_MAP[name]
+                sub_obj = SubClass.from_xml(t)
+                childs.append(sub_obj)
+            else:
+                attrs[name] = t.text
+        obj = cls(**attrs)
 
-        return cls(**attrs)
+        for i in childs:
+            obj.add_child(i)
+
+        return obj
+
+    def add_child(self, childobj):
+        xml_name = childobj.XML_NAME
+
+        if self.childs.has_key(xml_name):
+            self.childs[xml_name].append(childobj)
+        else:
+            self.childs[xml_name] = [childobj]
+
+
 
     def check_fields(self, fields):
         keys = self.attrs.keys()
@@ -53,8 +81,15 @@ def autocast(s):
         except ValueError:
             return s
 
-class Ticket(OTRSObject):
-    XML_NAME = 'Ticket'
-
 class Article(OTRSObject):
     XML_NAME = 'Article'
+
+class Ticket(OTRSObject):
+    XML_NAME = 'Ticket'
+    CHILD_MAP = {'Article' : Article}
+
+    def articles(self):
+        try:
+            return self.childs['Article']
+        except KeyError:
+            return []

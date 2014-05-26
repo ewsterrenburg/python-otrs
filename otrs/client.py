@@ -1,7 +1,7 @@
 import urllib2
 import os
 import xml.etree.ElementTree as etree
-from .objects import Ticket
+from .objects import Ticket, OTRSObject, extract_tagname
 
 def authenticated(func):
     def add_auth(self, *args, **kwargs):
@@ -39,6 +39,14 @@ class OTRSError(Exception):
     def __str__(self):
         return '{} : {}'.format(self.code, self.msg)
 
+class SOAPError(Exception):
+    def __init__(self, tag):
+        d = {extract_tagname(i): i.text for i in tag.getchildren()}
+        self.errcode = d['ErrorCode']
+        self.errmsg = d['ErrorMessage']
+
+    def __str__(self):
+        return '{} ({})'.format(self.errmsg, self.errcode)
 
 class GenericTicketConnector(object):
     """ Client for the GenericTicketConnector SOAP API
@@ -81,8 +89,11 @@ class GenericTicketConnector(object):
         xml_req_root = etree.Element(reqname)
 
         for k,v in kwargs.items():
-            e = etree.Element(k)
-            e.text = str(v)
+            if isinstance(v, OTRSObject):
+                e = v.to_xml()
+            else:
+                e = etree.Element(k)
+                e.text = str(v)
             xml_req_root.append(e)
 
         request = urllib2.Request(
@@ -95,10 +106,17 @@ class GenericTicketConnector(object):
         else:
             try:
                 s = fd.read()
-                return etree.fromstring(s)
+                e = etree.fromstring(s)
+
+                unpacked = self._unpack_resp_several(e)
+                if (len(unpacked) > 0) and (unpacked[0].tag.endswith('Error')):
+                    raise SOAPError(unpacked[0])
+                return e
             except etree.ParseError:
-                print 'error parsing:'
-                print s
+                print('error parsing:')
+                print('-'*80)
+                print(s)
+                print('-'*80)
                 raise
 
     @staticmethod
@@ -154,11 +172,12 @@ class GenericTicketConnector(object):
         ret = self.req('TicketSearch', **kwargs)
         return [int(i.text) for i in self._unpack_resp_several(ret)]
 
-
+    @authenticated
     def ticket_create(self, ticket, article, **kwargs):
         """
         @param ticket a Ticket
         @param article an Article
+        @returns the ticketID, TicketNumber
         """
         ticket_requirements = (
             ('StateID', 'State'),
@@ -168,3 +187,43 @@ class GenericTicketConnector(object):
         article_requirements = ('Subject', 'Body', 'Charset', 'MimeType')
         ticket.check_fields(ticket_requirements)
         article.check_fields(article_requirements)
+        ret = self.req('TicketCreate', ticket=ticket, article=article, **kwargs)
+        elements = self._unpack_resp_several(ret)
+        infos = {extract_tagname(i): int(i.text) for i in elements}
+        return infos['TicketID'], infos['TicketNumber']
+
+
+    @authenticated
+    def ticket_update(self, ticket_id=None, ticket_number=None,
+                      ticket=None, article=None, **kwargs):
+        """
+        @param ticket_id the ticket ID of the ticket to modify
+        @param ticket_number the ticket Number of the ticket to modify
+        @param ticket a ticket containing the fields to change on ticket
+        @param article a new Article to append to the ticket
+        @returns the ticketID, TicketNumber
+
+
+        Mandatory : - `ticket_id` xor `ticket_number`
+                    - `ticket` or `article`
+
+        """
+        if not (ticket_id is None):
+            kwargs['TicketID'] = ticket_id
+        elif not (ticket_number is None):
+            kwargs['TicketNumber'] = ticket_number
+        else:
+            raise ValueError('requires either ticket_id or ticket_number')
+
+        if (ticket is None) and (article is None):
+            raise ValueError('requires at least one among ticket, article')
+        else:
+            if (ticket):
+                kwargs['Ticket'] = ticket
+            if (article):
+                kwargs['Article'] = ticket
+
+        ret = self.req('TicketUpdate', **kwargs)
+        elements = self._unpack_resp_several(ret)
+        infos = {extract_tagname(i): int(i.text) for i in elements}
+        return infos['TicketID'], infos['TicketNumber']

@@ -1,3 +1,5 @@
+import xml.etree.ElementTree as etree
+
 class OTRSObject(object):
     def __init__(self, *args, **kwargs):
         self.attrs = kwargs
@@ -21,10 +23,17 @@ class OTRSObject(object):
             if isinstance(i, (tuple, list)):
                 valid = self.attrs.has_key(i[0]) or self.attrs.has_key(i[1])
             else:
-                valid = self.attrs.has_key(i[0])
+                valid = self.attrs.has_key(i)
             if not valid:
                 raise ValueError('{} should be filled'.format(i))
 
+    def to_xml(self):
+        root = etree.Element(self.XML_NAME)
+        for k, v in self.attrs.items():
+            e = etree.Element(k)
+            e.text = str(v)
+            root.append(e)
+        return root
 
 def extract_tagname(element):
     qualified_name = element.tag

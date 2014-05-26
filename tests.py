@@ -3,7 +3,7 @@ import os
 import xml.etree.ElementTree as etree
 
 from otrs.client import GenericTicketConnector
-from otrs.objects import Ticket
+from otrs.objects import Ticket, Article
 
 REQUIRED_VARS = 'OTRS_LOGIN', 'OTRS_PASSWORD', 'OTRS_SERVER', 'OTRS_WEBSERVICE'
 MISSING_VARS = []
@@ -77,6 +77,69 @@ if not MISSING_VARS:
             self.assertIsInstance(t_list, list)
             self.assertIn(32, t_list)
 
+        def test_ticket_create(self):
+            t = Ticket(State='new', Priority='3 normal', Queue='Support',
+                       Title='Problem test', CustomerUser='foo@exemple.fr',
+                       Type='Divers')
+            a = Article(Subject='UnitTest', Body='bla', Charset='UTF8',
+                        MimeType='text/plain')
+            t_id, t_number = self.c.ticket_create(t, a)
+            self.assertIsInstance(t_id, int)
+            self.assertIsInstance(t_number, int)
+            self.assertTrue(len(str(t_number)) >= 12)
+
+        def test_ticket_update_attrs_by_id(self):
+            t = Ticket(State='new', Priority='3 normal', Queue='Support',
+                       Title='Problem test', CustomerUser='foo@exemple.fr',
+                       Type='Divers')
+            a = Article(Subject='UnitTest', Body='bla', Charset='UTF8',
+                        MimeType='text/plain')
+            t_id, t_number = self.c.ticket_create(t, a)
+
+            t = Ticket(Title='Foubar')
+            upd_tid, upd_tnumber = self.c.ticket_update(ticket_id=t_id, ticket=t)
+            self.assertIsInstance(upd_tid, int)
+            self.assertIsInstance(upd_tnumber, int)
+            self.assertTrue(len(str(upd_tnumber)) >= 12)
+
+            self.assertEqual(upd_tid, t_id)
+            self.assertEqual(upd_tnumber, t_number)
+
+            upd_t = self.c.ticket_get(t_id)
+            self.assertEqual(upd_t.Title, 'Foubar')
+            self.assertEqual(upd_t.Queue, 'Support')
+
+        def test_ticket_update_attrs_by_number(self):
+            t = Ticket(State='new', Priority='3 normal', Queue='Support',
+                       Title='Problem test', CustomerUser='foo@exemple.fr',
+                       Type='Divers')
+            a = Article(Subject='UnitTest', Body='bla', Charset='UTF8',
+                        MimeType='text/plain')
+            t_id, t_number = self.c.ticket_create(t, a)
+
+            t = Ticket(Title='Foubar')
+            upd_tid, upd_tnumber = self.c.ticket_update(ticket_number=t_number,
+                                                        ticket=t)
+            self.assertIsInstance(upd_tid, int)
+            self.assertIsInstance(upd_tnumber, int)
+            self.assertTrue(len(str(upd_tnumber)) >= 12)
+
+            self.assertEqual(upd_tid, t_id)
+            self.assertEqual(upd_tnumber, t_number)
+
+            upd_t = self.c.ticket_get(t_id)
+            self.assertEqual(upd_t.Title, 'Foubar')
+            self.assertEqual(upd_t.Queue, 'Support')
+
+        def test_ticket_update_new_article(self):
+            t = Ticket(State='new', Priority='3 normal', Queue='Support',
+                       Title='Problem test', CustomerUser='foo@exemple.fr',
+                       Type='Divers')
+            a = Article(Subject='UnitTest', Body='bla', Charset='UTF8',
+                        MimeType='text/plain')
+            t_id, t_number = self.c.ticket_create(t, a)
+
+
 else:
     print 'Set OTRS_LOGIN and OTRS_PASSWORD env vars if you want "real"'+\
         'tests against a real OTRS to be run'
@@ -94,3 +157,16 @@ class TestObjects(TestCase):
         self.assertEqual(t.TicketID, 32)
         self.assertEqual(t.CustomerUserID, 'foo@bar.tld')
 
+
+    def test_ticket_to_xml(self):
+        t = Ticket(State='open', Priority='3 normal', Queue='Support')
+        xml = t.to_xml()
+        xml_childs = xml.getchildren()
+
+        xml_childs_dict = {i.tag: i.text for i in xml_childs}
+
+        self.assertEqual(xml.tag, 'Ticket')
+        self.assertEqual(len(xml_childs), 3)
+        self.assertEqual(xml_childs_dict['State'], 'open')
+        self.assertEqual(xml_childs_dict['Priority'], '3 normal')
+        self.assertEqual(xml_childs_dict['Queue'], 'Support')

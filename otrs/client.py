@@ -3,7 +3,33 @@ import os
 import xml.etree.ElementTree as etree
 from .objects import Ticket, OTRSObject, extract_tagname
 
+class OTRSError(Exception):
+    def __init__(self, fd):
+        self.code = fd.getcode()
+        self.msg = fd.read()
+
+    def __str__(self):
+        return '{} : {}'.format(self.code, self.msg)
+
+class SOAPError(OTRSError):
+    def __init__(self, tag):
+        d = {extract_tagname(i): i.text for i in tag.getchildren()}
+        self.errcode = d['ErrorCode']
+        self.errmsg = d['ErrorMessage']
+
+    def __str__(self):
+        return '{} ({})'.format(self.errmsg, self.errcode)
+
+
+class NoCredentialsException(OTRSError):
+    def __init__(self):
+        pass
+    def __str__(self):
+        return 'Register credentials first with register_credentials() method'
+
 def authenticated(func):
+    """ Decorator to add authentication parameters to a request
+    """
     def add_auth(self, *args, **kwargs):
         if self.session_id:
             kwargs['SessionID'] = self.session_id
@@ -11,17 +37,10 @@ def authenticated(func):
             kwargs['UserLogin'] = self.login
             kwargs['Password'] = self.password
         else:
-            raise ValueError(
-                'You should define either login/password or session_id')
+            raise NoCredentialsException()
 
         return func(self,*args, **kwargs)
     return add_auth
-
-
-class NoCredentialsException(Exception):
-    def __str__(self):
-        return 'Register credentials first with register_credentials() method'
-
 
 SOAP_ENVELOPPE = """
 <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
@@ -31,36 +50,11 @@ SOAP_ENVELOPPE = """
 </soapenv:Envelope>
 """
 
-class OTRSError(Exception):
-    def __init__(self, fd):
-        self.code = fd.getcode()
-        self.msg = fd.read()
-
-    def __str__(self):
-        return '{} : {}'.format(self.code, self.msg)
-
-class SOAPError(Exception):
-    def __init__(self, tag):
-        d = {extract_tagname(i): i.text for i in tag.getchildren()}
-        self.errcode = d['ErrorCode']
-        self.errmsg = d['ErrorMessage']
-
-    def __str__(self):
-        return '{} ({})'.format(self.errmsg, self.errcode)
-
 class GenericTicketConnector(object):
     """ Client for the GenericTicketConnector SOAP API
 
     see http://otrs.github.io/doc/manual/admin/3.3/en/html/genericinterface.html
     """
-    requests = {
-        'TicketCreate'  : None,
-        'TicketUpdate'  : [],
-        'TicketGet'     : None,
-        'TicketSearch'  : None,
-        'SessionCreate' : [('UserLogin', 'Password'),
-                               ('CustomerUserLogin', 'Password')]
-    }
 
     def __init__(self, server, webservice_name='GenericTicketConnector'):
         """ @param server : the http(s) URL of the root installation of OTRS
@@ -79,13 +73,23 @@ class GenericTicketConnector(object):
         self.session_id = None
 
     def register_credentials(self, login, password):
+        """ Save the identifiers in memory, they will be used with each
+            subsequent request requiring authentication
+        """
         self.login = login
         self.password = password
 
-    def req(self, reqname, with_auth=False, *args, **kwargs):
-        if not self.login or not self.password:
-            raise NoCredentialsException()
+    def req(self, reqname, *args, **kwargs):
+        """ Wrapper arround a SOAP request
+        @param reqname: the SOAP name of the request
+        @param kwargs : to define the tags included in the request.
+        @return       : the full etree.Element of the response
 
+        keyword arguments can be either
+         - simple types (they'l be converted to <name>value</name>)
+         - `OTRSObject`, they will be serialized with their `.to_xml()`
+
+        """
         xml_req_root = etree.Element(reqname)
 
         for k,v in kwargs.items():
@@ -121,18 +125,35 @@ class GenericTicketConnector(object):
 
     @staticmethod
     def _unpack_resp_several(element):
+        """
+        @param element : a etree.Element
+        @return        : a list of etree.Element
+        """
         return element.getchildren()[0].getchildren()[0].getchildren()
 
     @staticmethod
     def _unpack_resp_one(element):
+        """
+        @param element : a etree.Element
+        @return        : a etree.Element (first child of the response)
+        """
         return element.getchildren()[0].getchildren()[0].getchildren()[0]
 
     @staticmethod
     def _pack_req(element):
+        """
+        @param element : a etree.Element
+        @returns       : a string, wrapping element within the request tags
+
+        """
         return SOAP_ENVELOPPE.format(etree.tostring(element))
 
     def session_create(self, password, user_login=None,
                                        customer_user_login=None):
+        """ Logs the user or customeruser in
+
+        @returns the session_id
+        """
         if user_login:
             ret = self.req('SessionCreate',
                            UserLogin = user_login,
@@ -146,11 +167,16 @@ class GenericTicketConnector(object):
         return session_id
 
     def user_session_register(self, user, password):
+        """ Logs the user in and stores the session_id for subsequent requests
+        """
         self.session_id = self.session_create(
             password=password,
             user_login=user)
 
     def customer_user_session_register(self, user, password):
+        """ Logs the customer_user in and stores the session_id for subsequent
+        requests.
+        """
         self.session_id = self.session_create(
             password=password,
             customer_user_login=user)

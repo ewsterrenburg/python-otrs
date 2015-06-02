@@ -6,3 +6,6 @@ local_settings.py
 *.log
 supervisord.pid
 *.lock
+build
+dist
+*.egg-info

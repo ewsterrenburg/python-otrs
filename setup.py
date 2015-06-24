@@ -22,7 +22,7 @@ README = open(os.path.join(os.path.dirname(__file__), 'README.md')).read()
 
 setup(name='python-otrs',
       #version=mk_version('0.1'),
-      version='0.1',
+      version='0.0.2',
       description='A programatic interface to OTRS SOAP API.',
       long_description=README,
       author='Jocelyn Delalande',

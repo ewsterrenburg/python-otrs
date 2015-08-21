@@ -58,7 +58,10 @@ Create a ticket :
 			   Type='Divers')
     a = Article(Subject='UnitTest', Body='bla', Charset='UTF8',
 	            MimeType='text/plain')
-    t_id, t_number = client.ticket_create(t, a)
+    df1 = DynamicField(Name='TestName1', Value='TestValue1')
+    df2 = DynamicField(Name='TestName2', Value='TestValue2')
+                
+    t_id, t_number = client.ticket_create(t, a, [df1, df2])
 
 Append an article :
 

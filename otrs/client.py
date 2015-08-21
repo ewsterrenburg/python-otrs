@@ -191,6 +191,7 @@ class GenericTicketConnector(object):
 
         @param ticket_id : the TicketID of the ticket
         @param get_articles : grab articles linked to the ticket
+        @param get_dynamic_fields : include dynamic fields in result
 
         @return a `Ticket`, Ticket.articles() will give articles if relevant.
         """

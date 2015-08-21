@@ -58,7 +58,7 @@ Create a ticket :
 			   Type='Divers')
     a = Article(Subject='UnitTest', Body='bla', Charset='UTF8',
 	            MimeType='text/plain')
-    t_id, t_number = self.c.ticket_create(t, a)
+    t_id, t_number = client.ticket_create(t, a)
 
 Append an article :
 

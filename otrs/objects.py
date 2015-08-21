@@ -126,6 +126,9 @@ def autocast(s):
 class Article(OTRSObject):
     XML_NAME = 'Article'
 
+class DynamicField(OTRSObject):
+    XML_NAME = 'DynamicField'
+
 class Ticket(OTRSObject):
     XML_NAME = 'Ticket'
     CHILD_MAP = {'Article' : Article}

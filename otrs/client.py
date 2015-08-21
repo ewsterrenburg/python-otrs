@@ -95,10 +95,14 @@ class GenericTicketConnector(object):
         for k,v in kwargs.items():
             if isinstance(v, OTRSObject):
                 e = v.to_xml()
+                xml_req_root.append(e)
+            elif type(v) == list:
+                for vv in v:
+                    xml_req_root.append(vv.to_xml())
             else:
                 e = etree.Element(k)
                 e.text = str(v)
-            xml_req_root.append(e)
+                xml_req_root.append(e)
 
         request = urllib2.Request(
             self.endpoint, self._pack_req(xml_req_root),
@@ -182,7 +186,7 @@ class GenericTicketConnector(object):
             customer_user_login=user)
 
     @authenticated
-    def ticket_get(self, ticket_id, get_articles=False, *args, **kwargs):
+    def ticket_get(self, ticket_id, get_articles=False, get_dynamic_fields=False, *args, **kwargs):
         """ Get a ticket by id ; beware, TicketID != TicketNumber
 
         @param ticket_id : the TicketID of the ticket
@@ -194,7 +198,8 @@ class GenericTicketConnector(object):
         params.update(kwargs)
         if get_articles:
             params['AllArticles'] = True
-
+        if get_dynamic_fields:
+            params['DynamicFields'] = True
 
         ret = self.req('TicketGet', **params)
         return Ticket.from_xml(self._unpack_resp_one(ret))
@@ -208,10 +213,11 @@ class GenericTicketConnector(object):
         return [int(i.text) for i in self._unpack_resp_several(ret)]
 
     @authenticated
-    def ticket_create(self, ticket, article, **kwargs):
+    def ticket_create(self, ticket, article, dynamic_fields=None, **kwargs):
         """
         @param ticket a Ticket
         @param article an Article
+        @param dynamic_fields a list of DynamicField objects
         @returns the ticketID, TicketNumber
         """
         ticket_requirements = (
@@ -220,9 +226,13 @@ class GenericTicketConnector(object):
             ('QueueID', 'Queue'),
         )
         article_requirements = ('Subject', 'Body', 'Charset', 'MimeType')
+        dynamic_field_requirements = ('Name', 'Value')
         ticket.check_fields(ticket_requirements)
         article.check_fields(article_requirements)
-        ret = self.req('TicketCreate', ticket=ticket, article=article, **kwargs)
+        if dynamic_fields:
+            for df in dynamic_fields:
+                df.check_fields(dynamic_field_requirements)
+        ret = self.req('TicketCreate', ticket=ticket, article=article, dynamic_fields=dynamic_fields, **kwargs)
         elements = self._unpack_resp_several(ret)
         infos = {extract_tagname(i): int(i.text) for i in elements}
         return infos['TicketID'], infos['TicketNumber']

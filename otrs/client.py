@@ -186,12 +186,14 @@ class GenericTicketConnector(object):
             customer_user_login=user)
 
     @authenticated
-    def ticket_get(self, ticket_id, get_articles=False, get_dynamic_fields=False, *args, **kwargs):
+    def ticket_get(self, ticket_id, get_articles=False, get_dynamic_fields=False,
+                   get_attachments=False, *args, **kwargs):
         """ Get a ticket by id ; beware, TicketID != TicketNumber
 
         @param ticket_id : the TicketID of the ticket
         @param get_articles : grab articles linked to the ticket
         @param get_dynamic_fields : include dynamic fields in result
+        @param get_dynamic_fields : include attachments in result
 
         @return a `Ticket`, Ticket.articles() will give articles if relevant.
         """
@@ -201,6 +203,8 @@ class GenericTicketConnector(object):
             params['AllArticles'] = True
         if get_dynamic_fields:
             params['DynamicFields'] = True
+        if get_attachments:
+            params['Attachments'] = True
 
         ret = self.req('TicketGet', **params)
         return Ticket.from_xml(self._unpack_resp_one(ret))

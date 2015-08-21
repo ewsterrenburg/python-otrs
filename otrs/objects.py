@@ -123,11 +123,21 @@ def autocast(s):
         except ValueError:
             return s
 
-class Article(OTRSObject):
-    XML_NAME = 'Article'
+class Attachment(OTRSObject):
+    XML_NAME = 'Attachment'
 
 class DynamicField(OTRSObject):
     XML_NAME = 'DynamicField'
+
+class Article(OTRSObject):
+    XML_NAME = 'Article'
+    CHILD_MAP = {'Attachment' : Attachment}
+
+    def attachments(self):
+        try:
+            return self.childs['Attachment']
+        except KeyError:
+            return []
 
 class Ticket(OTRSObject):
     XML_NAME = 'Ticket'

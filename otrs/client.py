@@ -1,5 +1,5 @@
 import urllib2
-import os
+from posixpath import join as urljoin
 import xml.etree.ElementTree as etree
 from .objects import Ticket, OTRSObject, extract_tagname
 
@@ -64,9 +64,9 @@ class GenericTicketConnector(object):
                    (choosen by the otrs admin).
         """
 
-        self.endpoint = os.path.join(
+        self.endpoint = urljoin(
             server,
-            'otrs/nph-genericinterface.pl/Webservice',
+            'otrs/nph-genericinterface.pl/Webservice/',
             webservice_name)
         self.login = None
         self.password = None

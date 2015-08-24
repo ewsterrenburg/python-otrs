@@ -186,7 +186,8 @@ class GenericTicketConnector(object):
             customer_user_login=user)
 
     @authenticated
-    def ticket_get(self, ticket_id, get_articles=False, get_dynamic_fields=False,
+    def ticket_get(self, ticket_id, get_articles=False,
+                   get_dynamic_fields=False,
                    get_attachments=False, *args, **kwargs):
         """ Get a ticket by id ; beware, TicketID != TicketNumber
 
@@ -218,7 +219,8 @@ class GenericTicketConnector(object):
         return [int(i.text) for i in self._unpack_resp_several(ret)]
 
     @authenticated
-    def ticket_create(self, ticket, article, dynamic_fields=None, attachments=None, **kwargs):
+    def ticket_create(self, ticket, article, dynamic_fields=None,
+                      attachments=None, **kwargs):
         """
         @param ticket a Ticket
         @param article an Article
@@ -242,7 +244,9 @@ class GenericTicketConnector(object):
         if attachments:
             for att in attachments:
                 att.check_fields(attachment_field_requirements)
-        ret = self.req('TicketCreate', ticket=ticket, article=article, dynamic_fields=dynamic_fields, attachments=attachments, **kwargs)
+        ret = self.req('TicketCreate', ticket=ticket, article=article,
+                       dynamic_fields=dynamic_fields,
+                       attachments=attachments, **kwargs)
         elements = self._unpack_resp_several(ret)
         infos = {extract_tagname(i): int(i.text) for i in elements}
         return infos['TicketID'], infos['TicketNumber']

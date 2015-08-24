@@ -1,4 +1,5 @@
 import xml.etree.ElementTree as etree
+import os
 
 class OTRSObject(object):
     """ Represents an object for OTRS (mappable to an XML element)
@@ -138,6 +139,20 @@ class Article(OTRSObject):
             return self.childs['Attachment']
         except KeyError:
             return []
+
+    def save_attachments(self, folder):
+        """ Saves the attachments of an article to the specified folder
+
+        @param folder  : a str, folder to save the attachments
+        @returns       : a str, the name of the tag
+        """
+        for a in self.attachments():
+            fname = a.attrs['Filename']
+            fpath = os.path.join(folder, fname)
+            content = a.attrs['Content']
+            ffile = open(fpath, 'wb')
+            ffile.write(content.decode('base64'))
+            ffile.close()
 
 class Ticket(OTRSObject):
     XML_NAME = 'Ticket'

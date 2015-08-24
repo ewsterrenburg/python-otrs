@@ -218,11 +218,12 @@ class GenericTicketConnector(object):
         return [int(i.text) for i in self._unpack_resp_several(ret)]
 
     @authenticated
-    def ticket_create(self, ticket, article, dynamic_fields=None, **kwargs):
+    def ticket_create(self, ticket, article, dynamic_fields=None, attachments=None, **kwargs):
         """
         @param ticket a Ticket
         @param article an Article
         @param dynamic_fields a list of DynamicField objects
+        @param attachments a list of Attachment objects
         @returns the ticketID, TicketNumber
         """
         ticket_requirements = (
@@ -232,12 +233,16 @@ class GenericTicketConnector(object):
         )
         article_requirements = ('Subject', 'Body', 'Charset', 'MimeType')
         dynamic_field_requirements = ('Name', 'Value')
+        attachment_field_requirements = ('Content','ContentType', 'Filename')
         ticket.check_fields(ticket_requirements)
         article.check_fields(article_requirements)
         if dynamic_fields:
             for df in dynamic_fields:
                 df.check_fields(dynamic_field_requirements)
-        ret = self.req('TicketCreate', ticket=ticket, article=article, dynamic_fields=dynamic_fields, **kwargs)
+        if attachments:
+            for att in attachments:
+                att.check_fields(attachment_field_requirements)
+        ret = self.req('TicketCreate', ticket=ticket, article=article, dynamic_fields=dynamic_fields, attachments=attachments, **kwargs)
         elements = self._unpack_resp_several(ret)
         infos = {extract_tagname(i): int(i.text) for i in elements}
         return infos['TicketID'], infos['TicketNumber']

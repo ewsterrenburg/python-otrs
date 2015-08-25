@@ -1,7 +1,7 @@
 import urllib2
 from posixpath import join as urljoin
 import xml.etree.ElementTree as etree
-from .objects import Ticket, OTRSObject, extract_tagname
+from .objects import Ticket, OTRSObject, DynamicField, extract_tagname
 
 class OTRSError(Exception):
     def __init__(self, fd):
@@ -26,6 +26,15 @@ class NoCredentialsException(OTRSError):
         pass
     def __str__(self):
         return 'Register credentials first with register_credentials() method'
+
+class WrongOperatorException(OTRSError):
+    def __init__(self):
+        pass
+    def __str__(self):
+        return '''Please use one of the following operators for the
+               query on a dynamic field: 'Equals', 'Like', 'GreaterThan',
+               'GreaterThanEquals', 'SmallerThan', 'SmallerThanEquals'
+               '''
 
 def authenticated(func):
     """ Decorator to add authentication parameters to a request
@@ -218,10 +227,34 @@ class GenericTicketConnector(object):
         return Ticket.from_xml(self._unpack_resp_one(ret))
 
     @authenticated
-    def ticket_search(self, **kwargs):
+    def ticket_search(self, dynamic_fields=None, **kwargs):
         """
         @returns a list of matching TicketID
         """
+        df_search_list = []
+        dynamic_field_requirements = ('Name', 'Value', 'Operator')
+
+        if not (dynamic_fields is None):
+            for df in dynamic_fields:
+                df.check_fields(dynamic_field_requirements)
+                if df.Operator == 'Equals':
+                    df_search = DynamicField(Equals=df.Value)
+                elif df.Operator == 'Like':
+                    df_search = DynamicField(Like=df.Value)
+                elif df.Operator == 'GreaterThan':
+                    df_search = DynamicField(GreaterThan=df.Value)
+                elif df.Operator == 'GreaterThanEquals':
+                    df_search = DynamicField(GreaterThanEquals=df.Value)
+                elif df.Operator == 'SmallerThan':
+                    df_search = DynamicField(SmallerThan=df.Value)
+                elif df.Operator == 'SmallerThan':
+                    df_search = DynamicField(SmallerThan=df.Value)
+                else:
+                    raise WrongOperatorException()
+                df_search.XML_NAME = 'DynamicField_{0}'.format(df.Name)
+                df_search_list.append(df_search)
+            kwargs['DynamicFields'] = df_search_list
+
         ret = self.req('TicketSearch', **kwargs)
         return [int(i.text) for i in self._unpack_resp_several(ret)]
 

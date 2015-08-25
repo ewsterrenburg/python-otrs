@@ -32,8 +32,8 @@ class WrongOperatorException(OTRSError):
         pass
     def __str__(self):
         return '''Please use one of the following operators for the
-               query on a dynamic field: 'Equals', 'Like', 'GreaterThan',
-               'GreaterThanEquals', 'SmallerThan', 'SmallerThanEquals'
+               query on a dynamic field: `Equals`, `Like`, `GreaterThan`,
+               `GreaterThanEquals`, `SmallerThan`  or `SmallerThanEquals`.
                '''
 
 def authenticated(func):
@@ -229,11 +229,15 @@ class GenericTicketConnector(object):
     @authenticated
     def ticket_search(self, dynamic_fields=None, **kwargs):
         """
+        @param dynamic_fields a list of Dynamic Fields, in addition to
+        the combination of `Name` and `Value`, also an `Operator` for the
+        comparison is expexted `Equals`, `Like`, `GreaterThan`,
+        `GreaterThanEquals`, `SmallerThan` or `SmallerThanEquals`.
+        The `Like` operator accepts a %-sign as wildcard.
         @returns a list of matching TicketID
         """
         df_search_list = []
         dynamic_field_requirements = ('Name', 'Value', 'Operator')
-
         if not (dynamic_fields is None):
             for df in dynamic_fields:
                 df.check_fields(dynamic_field_requirements)

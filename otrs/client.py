@@ -278,10 +278,10 @@ class GenericTicketConnector(object):
         attachment_field_requirements = ('Content','ContentType', 'Filename')
         ticket.check_fields(ticket_requirements)
         article.check_fields(article_requirements)
-        if dynamic_fields:
+        if not (dynamic_fields is None):
             for df in dynamic_fields:
                 df.check_fields(dynamic_field_requirements)
-        if attachments:
+        if not (attachments is None):
             for att in attachments:
                 att.check_fields(attachment_field_requirements)
         ret = self.req('TicketCreate', ticket=ticket, article=article,

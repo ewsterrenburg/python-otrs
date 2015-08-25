@@ -144,7 +144,6 @@ class Article(OTRSObject):
         """ Saves the attachments of an article to the specified folder
 
         @param folder  : a str, folder to save the attachments
-        @returns       : a str, the name of the tag
         """
         for a in self.attachments():
             fname = a.attrs['Filename']

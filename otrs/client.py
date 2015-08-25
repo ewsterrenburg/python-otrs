@@ -88,6 +88,9 @@ class GenericTicketConnector(object):
         keyword arguments can be either
          - simple types (they'l be converted to <name>value</name>)
          - `OTRSObject`, they will be serialized with their `.to_xml()`
+         - list of  `OTRSObject`s: each  `OTRSObject`s in the list
+           will be serialized with their `.to_xml()` (used for
+           dynamic fields and attachments).
 
         """
         xml_req_root = etree.Element(reqname)
@@ -108,6 +111,7 @@ class GenericTicketConnector(object):
             self.endpoint, self._pack_req(xml_req_root),
             {'Content-Type': 'text/xml;charset=utf-8'}
         )
+        print self._pack_req(xml_req_root)
         fd = urllib2.urlopen(request)
         if fd.getcode() != 200:
             raise OTRSError(fd)
@@ -194,9 +198,12 @@ class GenericTicketConnector(object):
         @param ticket_id : the TicketID of the ticket
         @param get_articles : grab articles linked to the ticket
         @param get_dynamic_fields : include dynamic fields in result
-        @param get_dynamic_fields : include attachments in result
+        @param get_attachments : include attachments in result
 
         @return a `Ticket`, Ticket.articles() will give articles if relevant.
+        Ticket.articles()[i].attachments() will return the attachments for
+        an article, wheres Ticket.articles()[i].save_attachments(<folderpath>)
+        will save the attachments of article[i] to the specified folder.
         """
         params = {'TicketID' : str(ticket_id)}
         params.update(kwargs)
@@ -224,8 +231,8 @@ class GenericTicketConnector(object):
         """
         @param ticket a Ticket
         @param article an Article
-        @param dynamic_fields a list of DynamicField objects
-        @param attachments a list of Attachment objects
+        @param dynamic_fields a list of Dynamic Fields
+        @param attachments a list of Attachments
         @returns the ticketID, TicketNumber
         """
         ticket_requirements = (
@@ -254,17 +261,19 @@ class GenericTicketConnector(object):
 
     @authenticated
     def ticket_update(self, ticket_id=None, ticket_number=None,
-                      ticket=None, article=None, **kwargs):
+                      ticket=None, article=None,
+                      dynamic_fields=None, **kwargs):
         """
         @param ticket_id the ticket ID of the ticket to modify
         @param ticket_number the ticket Number of the ticket to modify
         @param ticket a ticket containing the fields to change on ticket
         @param article a new Article to append to the ticket
+        @param dynamic_fields a list of Dynamic Fields to change on ticket
         @returns the ticketID, TicketNumber
 
 
         Mandatory : - `ticket_id` xor `ticket_number`
-                    - `ticket` or `article`
+                    - `ticket` or `article` or `dynamic_fields`
 
         """
         if not (ticket_id is None):
@@ -274,13 +283,15 @@ class GenericTicketConnector(object):
         else:
             raise ValueError('requires either ticket_id or ticket_number')
 
-        if (ticket is None) and (article is None):
-            raise ValueError('requires at least one among ticket, article')
+        if (ticket is None) and (article is None) and (dynamic_fields is None):
+            raise ValueError('requires at least one among ticket, article, dynamic_fields')
         else:
             if (ticket):
                 kwargs['Ticket'] = ticket
             if (article):
                 kwargs['Article'] = article
+            if (dynamic_fields):
+                kwargs['DynamicField'] = dynamic_fields
 
         ret = self.req('TicketUpdate', **kwargs)
         elements = self._unpack_resp_several(ret)

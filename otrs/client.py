@@ -298,14 +298,15 @@ class GenericTicketConnector(object):
 
     @authenticated
     def ticket_update(self, ticket_id=None, ticket_number=None,
-                      ticket=None, article=None,
-                      dynamic_fields=None, **kwargs):
+                      ticket=None, article=None, dynamic_fields=None,
+                      attachments=None, **kwargs):
         """
         @param ticket_id the ticket ID of the ticket to modify
         @param ticket_number the ticket Number of the ticket to modify
         @param ticket a ticket containing the fields to change on ticket
         @param article a new Article to append to the ticket
         @param dynamic_fields a list of Dynamic Fields to change on ticket
+        @param attachments a list of Attachments for a newly appended article
         @returns the ticketID, TicketNumber
 
 
@@ -321,7 +322,9 @@ class GenericTicketConnector(object):
             raise ValueError('requires either ticket_id or ticket_number')
 
         if (ticket is None) and (article is None) and (dynamic_fields is None):
-            raise ValueError('requires at least one among ticket, article, dynamic_fields')
+                raise ValueError('requires at least one among ticket, article, dynamic_fields')
+        elif (article is None) and not (attachments is None):
+                raise ValueError('Attachments can only be created for a newly appended article')
         else:
             if (ticket):
                 kwargs['Ticket'] = ticket
@@ -329,6 +332,8 @@ class GenericTicketConnector(object):
                 kwargs['Article'] = article
             if (dynamic_fields):
                 kwargs['DynamicField'] = dynamic_fields
+            if (attachments):
+                kwargs['Attachment'] = attachments
 
         ret = self.req('TicketUpdate', **kwargs)
         elements = self._unpack_resp_several(ret)

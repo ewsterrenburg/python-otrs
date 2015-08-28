@@ -322,9 +322,9 @@ class GenericTicketConnector(object):
             raise ValueError('requires either ticket_id or ticket_number')
 
         if (ticket is None) and (article is None) and (dynamic_fields is None):
-                raise ValueError('requires at least one among ticket, article, dynamic_fields')
+            raise ValueError('requires at least one among ticket, article, dynamic_fields')
         elif (article is None) and not (attachments is None):
-                raise ValueError('Attachments can only be created for a newly appended article')
+            raise ValueError('Attachments can only be created for a newly appended article')
         else:
             if (ticket):
                 kwargs['Ticket'] = ticket

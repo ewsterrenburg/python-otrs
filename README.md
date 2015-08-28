@@ -8,16 +8,18 @@ Features
 
 - Implements fully communication with the `GenericTicketConnector` provided as
   webservice example by OTRS;
+- dynamic fields and attachments are supported;
 - authentication is handled programaticaly, per-request or per-session;
 - calls are wrapped in OTRSClient methods;
 - OTRS XML objects are mapped to Python-style objects see objects.Article and
   objects.Ticket.
 
-Non-features
-------------
+To be done
+-----
 
-- Tickets attachments
-
+- Test for python3 compatible and make resulting changes;
+- improve and extend `tests.py`;
+- registrate on pypi.
 
 Install
 -------
@@ -28,12 +30,12 @@ Using
 -----
 
 First make sure you installed the `GenericTicketConnector` webservice, see
-[official documentation](http://otrs.github.io/doc/manual/admin/3.3/en/html/genericinterface.html#generic-ticket-connector).
+[official documentation](http://otrs.github.io/doc/manual/admin/4.0/en/html/genericinterface.html#generic-ticket-connector).
 
     from otrs.client import GenericTicketConnector
-	from otrs.objects import Ticket, Article
+	from otrs.objects import Ticket, Article, DynamicField, Attachment
 
-	server_uri = https://otrs.exemple.net
+	server_uri = https://otrs.example.net
 	webservice_name = 'GenericTicketConnector'
     client = GenericTicketConnector(server_uri, webservice_name)
 
@@ -60,21 +62,41 @@ Create a ticket :
 	            MimeType='text/plain')
     df1 = DynamicField(Name='TestName1', Value='TestValue1')
     df2 = DynamicField(Name='TestName2', Value='TestValue2')
-                
-    t_id, t_number = client.ticket_create(t, a, [df1, df2])
+    att_path = r'C:\Temp\image001.png'
+    att_file = open(att_path , 'rb')
+    att1 = Attachment(Content=att_file.read().encode('base64'),
+    				  ContentType=mimetype, Filename="image001.png")
+    att_file.close()
 
-Append an article :
+    t_id, t_number = client.ticket_create(t, a, [df1, df2], [att1])
 
-     new_article = Article(Subject='Moar info', Body='blabla', Charset='UTF8',
-                           MimeType='text/plain')
-	 client.update_ticket(article=new_article)
+Update an article :
+
+	# changes the title of the ticket
+    t_upd = Ticket(Title='Updated ticket')
+	client.ticket_update(t_id, t_upd)
+
+	# appends an article (attachments optional)
+    new_article = Article(Subject='Moar info', Body='blabla', Charset='UTF8',
+                          MimeType='text/plain')
+	client.update_ticket(article=new_article, attachments=None)
 
 Search for tickets :
 
 	  # returns all the tickets of customer 42
       tickets = client.ticket_search(CustomerID=42)
+      
+      # returns all tickets in queue Support
+      # for which Dynamic Field 'Project' starts with 'Pizza': 
+      df2 = DynamicField(Name='Project', Value='Pizza%', Operator="Like")
+      client.ticket_search(Queues='Support', dynamic_fields=[df_search])      
 
+Retrieve a ticket :
+	
+    ticket = client.ticket_get(138, get_articles=True, get_dynamic_fields=True, get_attachments=True)
+    article = ticket.articles()[0]
+    article.save_attachments(r'C:\temp')
 
 Many options are possible with requests, you can use all the options available
 in
-[official documentation](http://otrs.github.io/doc/manual/admin/3.3/en/html/genericinterface.html#generic-ticket-connector).
+[official documentation](http://otrs.github.io/doc/manual/admin/4.0/en/html/genericinterface.html#generic-ticket-connector).

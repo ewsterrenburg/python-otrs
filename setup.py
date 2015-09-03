@@ -4,31 +4,38 @@
 import os
 from setuptools import setup, find_packages
 
-README = open(os.path.join(os.path.dirname(__file__), 'README.md')).read()
+README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 
-
-#def mk_version(base_version):
-#    try:
-#        try:
-#            GIT_HEAD = open('.git/HEAD').readline().split(':')[1].strip()
-#        except IndexError: # if we checkout a commit
-#            GIT_HEAD_REV = open('.git/HEAD').readline()
-#        else:
-#            GIT_HEAD_REV = open('.git/{0}'.format(GIT_HEAD)).readline().strip()
-#
-#        return '{0}-git-{1:.7}'.format(base_version, GIT_HEAD_REV)
-#    except IOError:
-#        return base_version
-
-setup(name='python-otrs',
-      #version=mk_version('0.1'),
-      version='0.0.2',
-      description='A programatic interface to OTRS SOAP API.',
-      long_description=README,
-      author='Jocelyn Delalande',
-      author_email='jdelalande@oasiswork.fr',
-      url='https://github.com/oasiswork/python-otrs',
-      zip_safe=False,
-      packages=find_packages(),
-      include_package_data=True,
-      )
+setup(
+    name='python-otrs',
+    version='0.1.0',
+    description='A programmatic interface to OTRS SOAP API.',
+    long_description=README,
+    author='Erwin Sterrenburg',
+    author_email='e.w.sterrenburg@gmail.com',
+    url='https://github.com/ewsterrenburg/python-otrs',
+    license='GPLv3',
+    zip_safe=False,
+    packages=find_packages(),
+    include_package_data=True,
+    keywords='otrs ticket support soap interface helpdesk',
+    classifiers=[
+        # How mature is this project? Common values are
+        #   3 - Alpha
+        #   4 - Beta
+        #   5 - Production/Stable
+        'Development Status :: 4 - Beta',
+        'Environment :: Web Environment',
+        'Natural Language :: English',
+        # Indicate who your project is intended for
+        'Intended Audience :: Developers',
+        'Operating System :: OS Independent',
+        'Topic :: Office/Business',
+        'Topic :: Software Development :: Bug Tracking',
+        # Pick your license as you wish (should match "license" above)
+        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+        # Specify the Python versions you support here. In particular, ensure
+        # that you indicate whether you support Python 2, Python 3 or both.
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+    ], )

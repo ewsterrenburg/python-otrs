@@ -19,7 +19,6 @@ To be done
 
 -  Test for python3 compatibility and make resulting changes;
 -  improve and extend ``tests.py``;
--  register on pypi.
 
 Install
 -------

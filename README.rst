@@ -101,11 +101,13 @@ Search for tickets :
       df2 = DynamicField(Name='Project', Value='Pizza%', Operator="Like")
       client.ticket_search(Queues='Support', dynamic_fields=[df_search])
 
-Retrieve a ticket :
-
 ::
 
-    ticket = client.ticket_get(138, get_articles=True,
+    ticket = client.ticket_get(138, get_articles=True, get_dynamic_fields=True, get_attachments=True)
+    article = ticket.articles()[0]
+    article.save_attachments(r'C:\temp')
 
+Many options are possible with requests, you can use all the options
+available in `official documentation`_.
 
 .. _official documentation: http://otrs.github.io/doc/manual/admin/4.0/en/html/genericinterface.html#generic-ticket-connector

@@ -1,6 +1,7 @@
 import xml.etree.ElementTree as etree
 import os
 
+
 class OTRSObject(object):
     """ Represents an object for OTRS (mappable to an XML element)
     """
@@ -93,6 +94,7 @@ class OTRSObject(object):
             root.append(e)
         return root
 
+
 def extract_tagname(element):
     """ Returns the name of the tag, without namespace
 
@@ -109,6 +111,7 @@ def extract_tagname(element):
         return element.tag
         #raise ValueError('"{}" is not a tag name'.format(qualified_name))
 
+
 def autocast(s):
     """ Tries to guess the simple type and convert the value to it.
 
@@ -124,15 +127,18 @@ def autocast(s):
         except ValueError:
             return s
 
+
 class Attachment(OTRSObject):
     XML_NAME = 'Attachment'
+
 
 class DynamicField(OTRSObject):
     XML_NAME = 'DynamicField'
 
+
 class Article(OTRSObject):
     XML_NAME = 'Article'
-    CHILD_MAP = {'Attachment' : Attachment}
+    CHILD_MAP = {'Attachment': Attachment}
 
     def attachments(self):
         try:
@@ -153,9 +159,10 @@ class Article(OTRSObject):
             ffile.write(content.decode('base64'))
             ffile.close()
 
+
 class Ticket(OTRSObject):
     XML_NAME = 'Ticket'
-    CHILD_MAP = {'Article' : Article}
+    CHILD_MAP = {'Article': Article}
 
     def articles(self):
         try:

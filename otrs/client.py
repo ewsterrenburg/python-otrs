@@ -3,6 +3,7 @@ from posixpath import join as urljoin
 import xml.etree.ElementTree as etree
 from .objects import Ticket, OTRSObject, DynamicField, extract_tagname
 
+
 class OTRSError(Exception):
     def __init__(self, fd):
         self.code = fd.getcode()
@@ -10,6 +11,7 @@ class OTRSError(Exception):
 
     def __str__(self):
         return '{} : {}'.format(self.code, self.msg)
+
 
 class SOAPError(OTRSError):
     def __init__(self, tag):
@@ -24,21 +26,26 @@ class SOAPError(OTRSError):
 class NoCredentialsException(OTRSError):
     def __init__(self):
         pass
+
     def __str__(self):
         return 'Register credentials first with register_credentials() method'
+
 
 class WrongOperatorException(OTRSError):
     def __init__(self):
         pass
+
     def __str__(self):
         return '''Please use one of the following operators for the
                query on a dynamic field: `Equals`, `Like`, `GreaterThan`,
                `GreaterThanEquals`, `SmallerThan`  or `SmallerThanEquals`.
                '''
 
+
 def authenticated(func):
     """ Decorator to add authentication parameters to a request
     """
+
     def add_auth(self, *args, **kwargs):
         if self.session_id:
             kwargs['SessionID'] = self.session_id
@@ -48,8 +55,10 @@ def authenticated(func):
         else:
             raise NoCredentialsException()
 
-        return func(self,*args, **kwargs)
+        return func(self, *args, **kwargs)
+
     return add_auth
+
 
 SOAP_ENVELOPPE = """
 <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
@@ -58,6 +67,7 @@ SOAP_ENVELOPPE = """
   <soapenv:Body>{}</soapenv:Body>
 </soapenv:Envelope>
 """
+
 
 class GenericTicketConnector(object):
     """ Client for the GenericTicketConnector SOAP API
@@ -74,8 +84,7 @@ class GenericTicketConnector(object):
         """
 
         self.endpoint = urljoin(
-            server,
-            'otrs/nph-genericinterface.pl/Webservice/',
+            server, 'otrs/nph-genericinterface.pl/Webservice/',
             webservice_name)
         self.login = None
         self.password = None
@@ -104,7 +113,7 @@ class GenericTicketConnector(object):
         """
         xml_req_root = etree.Element(reqname)
 
-        for k,v in kwargs.items():
+        for k, v in kwargs.items():
             if isinstance(v, OTRSObject):
                 e = v.to_xml()
                 xml_req_root.append(e)
@@ -118,8 +127,7 @@ class GenericTicketConnector(object):
 
         request = urllib2.Request(
             self.endpoint, self._pack_req(xml_req_root),
-            {'Content-Type': 'text/xml;charset=utf-8'}
-        )
+            {'Content-Type': 'text/xml;charset=utf-8'})
         print self._pack_req(xml_req_root)
         fd = urllib2.urlopen(request)
         if fd.getcode() != 200:
@@ -135,9 +143,9 @@ class GenericTicketConnector(object):
                 return e
             except etree.ParseError:
                 print('error parsing:')
-                print('-'*80)
+                print('-' * 80)
                 print(s)
-                print('-'*80)
+                print('-' * 80)
                 raise
 
     @staticmethod
@@ -173,12 +181,12 @@ class GenericTicketConnector(object):
         """
         if user_login:
             ret = self.req('SessionCreate',
-                           UserLogin = user_login,
-                           Password  = password)
+                           UserLogin=user_login,
+                           Password=password)
         else:
             ret = self.req('SessionCreate',
-                           CustomerUserLogin = customer_user_login,
-                           Password          = password)
+                           CustomerUserLogin=customer_user_login,
+                           Password=password)
         signal = self._unpack_resp_one(ret)
         session_id = signal.text
         return session_id
@@ -214,7 +222,7 @@ class GenericTicketConnector(object):
         an article, wheres Ticket.articles()[i].save_attachments(<folderpath>)
         will save the attachments of article[i] to the specified folder.
         """
-        params = {'TicketID' : str(ticket_id)}
+        params = {'TicketID': str(ticket_id)}
         params.update(kwargs)
         if get_articles:
             params['AllArticles'] = True
@@ -273,13 +281,11 @@ class GenericTicketConnector(object):
         @returns the ticketID, TicketNumber
         """
         ticket_requirements = (
-            ('StateID', 'State'),
-            ('PriorityID', 'Priority'),
-            ('QueueID', 'Queue'),
-        )
+            ('StateID', 'State'), ('PriorityID', 'Priority'),
+            ('QueueID', 'Queue'), )
         article_requirements = ('Subject', 'Body', 'Charset', 'MimeType')
         dynamic_field_requirements = ('Name', 'Value')
-        attachment_field_requirements = ('Content','ContentType', 'Filename')
+        attachment_field_requirements = ('Content', 'ContentType', 'Filename')
         ticket.check_fields(ticket_requirements)
         article.check_fields(article_requirements)
         if not (dynamic_fields is None):
@@ -294,7 +300,6 @@ class GenericTicketConnector(object):
         elements = self._unpack_resp_several(ret)
         infos = {extract_tagname(i): int(i.text) for i in elements}
         return infos['TicketID'], infos['TicketNumber']
-
 
     @authenticated
     def ticket_update(self, ticket_id=None, ticket_number=None,
@@ -322,9 +327,11 @@ class GenericTicketConnector(object):
             raise ValueError('requires either ticket_id or ticket_number')
 
         if (ticket is None) and (article is None) and (dynamic_fields is None):
-            raise ValueError('requires at least one among ticket, article, dynamic_fields')
+            raise ValueError(
+                'requires at least one among ticket, article, dynamic_fields')
         elif (article is None) and not (attachments is None):
-            raise ValueError('Attachments can only be created for a newly appended article')
+            raise ValueError(
+                'Attachments can only be created for a newly appended article')
         else:
             if (ticket):
                 kwargs['Ticket'] = ticket

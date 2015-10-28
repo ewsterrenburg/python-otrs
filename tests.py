@@ -301,8 +301,8 @@ if not MISSING_VARS:
             self.assertEqual(arts_upd[3].Subject, 'UnitTest3')
 
 else:
-    print 'Set OTRS_LOGIN and OTRS_PASSWORD env vars if you want "real"'+\
-        'tests against a real OTRS to be run'
+    print ('Set OTRS_LOGIN and OTRS_PASSWORD env vars if you want "real"'+\
+        'tests against a real OTRS to be run')
 
 
 class TestObjects(unittest.TestCase):

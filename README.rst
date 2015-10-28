@@ -62,6 +62,7 @@ Create a ticket :
 ::
 
     import mimetypes
+    import base64
 
     t = Ticket(State='new', Priority='3 normal', Queue='Support',
                Title='Problem test', CustomerUser='foo@example.fr',
@@ -73,7 +74,8 @@ Create a ticket :
     att_path = r'C:\Temp\image001.png'
     mimetype = mimetypes.guess_type(att_path)[0]
     att_file = open(att_path , 'rb')
-    att1 = Attachment(Content=att_file.read().encode('base64'),
+    att_content = base64.b64encode(af1.read())
+    att1 = Attachment(Content=att_content,
                       ContentType=mimetype, Filename="image001.png")
     att_file.close()
 

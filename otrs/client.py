@@ -1,8 +1,11 @@
-import urllib2
+try:
+    import urllib.request as urllib2
+except ImportError:
+    import urllib2
 from posixpath import join as urljoin
 import xml.etree.ElementTree as etree
 from .objects import Ticket, OTRSObject, DynamicField, extract_tagname
-
+import codecs
 
 class OTRSError(Exception):
     def __init__(self, fd):
@@ -128,7 +131,7 @@ class GenericTicketConnector(object):
         request = urllib2.Request(
             self.endpoint, self._pack_req(xml_req_root),
             {'Content-Type': 'text/xml;charset=utf-8'})
-        print self._pack_req(xml_req_root)
+
         fd = urllib2.urlopen(request)
         if fd.getcode() != 200:
             raise OTRSError(fd)
@@ -171,7 +174,7 @@ class GenericTicketConnector(object):
         @returns       : a string, wrapping element within the request tags
 
         """
-        return SOAP_ENVELOPPE.format(etree.tostring(element))
+        return SOAP_ENVELOPPE.format(codecs.decode(etree.tostring(element),'utf-8')).encode('utf-8')
 
     def session_create(self, password, user_login=None,
                                        customer_user_login=None):

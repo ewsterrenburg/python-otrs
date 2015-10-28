@@ -1,5 +1,8 @@
+from __future__ import unicode_literals
 import xml.etree.ElementTree as etree
 import os
+import base64
+
 
 
 class OTRSObject(object):
@@ -59,7 +62,7 @@ class OTRSObject(object):
         """
         xml_name = childobj.XML_NAME
 
-        if self.childs.has_key(xml_name):
+        if xml_name in self.childs:
             self.childs[xml_name].append(childobj)
         else:
             self.childs[xml_name] = [childobj]
@@ -72,12 +75,19 @@ class OTRSObject(object):
          - a field name : this field is required
          - a tuple of field names : on of this fields is required
         """
-        keys = self.attrs.keys()
+        set_keys = set(self.attrs.keys())
+
         for i in fields:
-            if isinstance(i, (tuple, list)):
-                valid = self.attrs.has_key(i[0]) or self.attrs.has_key(i[1])
+            if isinstance(i, str):
+                set_fields = set([i])
             else:
-                valid = self.attrs.has_key(i)
+                set_fields = set(i)
+
+            if set_keys.intersection(set_fields):
+                valid = True
+            else:
+                valid = False
+
             if not valid:
                 raise ValueError('{} should be filled'.format(i))
 
@@ -88,7 +98,7 @@ class OTRSObject(object):
         root = etree.Element(self.XML_NAME)
         for k, v in self.attrs.items():
             e = etree.Element(k)
-            if type(v) == unicode:
+            if isinstance(e, str):  #  True
                 v = v.encode('utf-8')
             e.text = str(v)
             root.append(e)
@@ -155,8 +165,9 @@ class Article(OTRSObject):
             fname = a.attrs['Filename']
             fpath = os.path.join(folder, fname)
             content = a.attrs['Content']
+            fcontent = base64.b64decode(content)
             ffile = open(fpath, 'wb')
-            ffile.write(content.decode('base64'))
+            ffile.write(fcontent)
             ffile.close()
 
 

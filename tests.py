@@ -177,31 +177,31 @@ if not MISSING_VARS:
             self.assertEqual(len(sessid), 32)
 
         def test_ticket_get(self):
-            t = self.c.ticket_get(32)
-            self.assertEqual(t.TicketID, 32)
-            self.assertEqual(t.StateType, 'closed')
+            t = self.c.ticket_get(1)
+            self.assertEqual(t.TicketID, 1)
+            self.assertEqual(t.StateType, 'new')
 
         def test_ticket_get_with_articles(self):
-            t = self.c.ticket_get(32, get_articles=True)
-            self.assertEqual(t.TicketID, 32)
-            self.assertEqual(t.StateType, 'closed')
+            t = self.c.ticket_get(1, get_articles=True)
+            self.assertEqual(t.TicketID, 1)
+            self.assertEqual(t.StateType, 'new')
             articles = t.articles()
             self.assertIsInstance(articles, (list, tuple))
             self.assertIsInstance(articles[0], Article)
             self.assertEqual(articles[0].SenderType, 'customer')
 
         def test_ticket_search(self):
-            t_list = self.c.ticket_search(CustomerID=9)
+            t_list = self.c.ticket_search(Title='Welcome to OTRS!')
             self.assertIsInstance(t_list, list)
-            self.assertIn(32, t_list)
+            self.assertIn(1, t_list)
 
         def test_ticket_create(self):
             t = Ticket(State='new',
                        Priority='3 normal',
-                       Queue='Support',
+                       Queue='Postmaster',
                        Title='Problem test',
                        CustomerUser='foo@exemple.fr',
-                       Type='Divers')
+                       Type='Unclassified')
             a = Article(Subject='UnitTest',
                         Body='bla',
                         Charset='UTF8',
@@ -210,14 +210,15 @@ if not MISSING_VARS:
             self.assertIsInstance(t_id, int)
             self.assertIsInstance(t_number, int)
             self.assertTrue(len(str(t_number)) >= 12)
+            exit
 
         def test_ticket_update_attrs_by_id(self):
             t = Ticket(State='new',
                        Priority='3 normal',
-                       Queue='Support',
+                       Queue='Postmaster',
                        Title='Problem test',
                        CustomerUser='foo@exemple.fr',
-                       Type='Divers')
+                       Type='Unclassified')
             a = Article(Subject='UnitTest',
                         Body='bla',
                         Charset='UTF8',
@@ -236,15 +237,15 @@ if not MISSING_VARS:
 
             upd_t = self.c.ticket_get(t_id)
             self.assertEqual(upd_t.Title, 'Foubar')
-            self.assertEqual(upd_t.Queue, 'Support')
+            self.assertEqual(upd_t.Queue, 'Postmaster')
 
         def test_ticket_update_attrs_by_number(self):
             t = Ticket(State='new',
                        Priority='3 normal',
-                       Queue='Support',
+                       Queue='Postmaster',
                        Title='Problem test',
                        CustomerUser='foo@exemple.fr',
-                       Type='Divers')
+                       Type='Unclassified')
             a = Article(Subject='UnitTest',
                         Body='bla',
                         Charset='UTF8',
@@ -263,15 +264,15 @@ if not MISSING_VARS:
 
             upd_t = self.c.ticket_get(t_id)
             self.assertEqual(upd_t.Title, 'Foubar')
-            self.assertEqual(upd_t.Queue, 'Support')
+            self.assertEqual(upd_t.Queue, 'Postmaster')
 
         def test_ticket_update_new_article(self):
             t = Ticket(State='new',
                        Priority='3 normal',
-                       Queue='Support',
+                       Queue='Postmaster',
                        Title='Problem test',
                        CustomerUser='foo@exemple.fr',
-                       Type='Divers')
+                       Type='Unclassified')
             a = Article(Subject='UnitTest',
                         Body='bla',
                         Charset='UTF8',
@@ -294,15 +295,19 @@ if not MISSING_VARS:
             t_upd = self.c.ticket_get(t_id, get_articles=True)
             arts_upd = t_upd.articles()
             self.assertIsInstance(arts_upd, list)
-            self.assertEqual(len(arts_upd), 4)
+            self.assertEqual(len(arts_upd), 3)
             self.assertEqual(arts_upd[0].Subject, 'UnitTest')
-            # article 1 is an auto response
-            self.assertEqual(arts_upd[2].Subject, 'UnitTest2')
-            self.assertEqual(arts_upd[3].Subject, 'UnitTest3')
+            self.assertEqual(arts_upd[1].Subject, 'UnitTest2')
+            self.assertEqual(arts_upd[2].Subject, 'UnitTest3')
 
 else:
-    print ('Set OTRS_LOGIN and OTRS_PASSWORD env vars if you want "real"'+\
-        'tests against a real OTRS to be run')
+    print("Set OTRS_LOGIN, OTRS_PASSWORD, OTRS_SERVER and OTRS_WEBSERVICE\n"
+        "env vars if you want to run tests against a REAL OTRS web service\n\n"
+        "example:\n\n"
+        "export OTRS_LOGIN=mylogin\n"
+        "export OTRS_PASSWORD=mypassword\n"
+        "export OTRS_SERVER=https://myotrs.example.com\n"
+        "export OTRS_WEBSERVICE=GenericTicketConnectorSOAP\n")
 
 
 class TestObjects(unittest.TestCase):
@@ -329,7 +334,7 @@ class TestObjects(unittest.TestCase):
         self.assertEqual(articles[0].AgeTimeUnix, 863982)
 
     def test_ticket_to_xml(self):
-        t = Ticket(State='open', Priority='3 normal', Queue='Support')
+        t = Ticket(State='open', Priority='3 normal', Queue='Postmaster')
         xml = t.to_xml()
         xml_childs = xml.getchildren()
 
@@ -339,7 +344,7 @@ class TestObjects(unittest.TestCase):
         self.assertEqual(len(xml_childs), 3)
         self.assertEqual(xml_childs_dict['State'], 'open')
         self.assertEqual(xml_childs_dict['Priority'], '3 normal')
-        self.assertEqual(xml_childs_dict['Queue'], 'Support')
+        self.assertEqual(xml_childs_dict['Queue'], 'Postmaster')
 
 
 if __name__ == '__main__':

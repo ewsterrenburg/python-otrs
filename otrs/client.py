@@ -78,7 +78,7 @@ class GenericTicketConnector(object):
     see http://otrs.github.io/doc/manual/admin/3.3/en/html/genericinterface.html
     """
 
-    def __init__(self, server, webservice_name='GenericTicketConnector'):
+    def __init__(self, server, webservice_name='GenericTicketConnector', ssl_context=None):
         """ @param server : the http(s) URL of the root installation of OTRS
                             (e.g: https://tickets.example.net)
 
@@ -92,6 +92,7 @@ class GenericTicketConnector(object):
         self.login = None
         self.password = None
         self.session_id = None
+        self.ssl_context = ssl_context
 
     def register_credentials(self, login, password):
         """ Save the identifiers in memory, they will be used with each
@@ -132,7 +133,7 @@ class GenericTicketConnector(object):
             self.endpoint, self._pack_req(xml_req_root),
             {'Content-Type': 'text/xml;charset=utf-8'})
 
-        fd = urllib2.urlopen(request)
+        fd = urllib2.urlopen(request, context=self.ssl_context)
         if fd.getcode() != 200:
             raise OTRSError(fd)
         else:

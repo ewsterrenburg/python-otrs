@@ -135,7 +135,7 @@ class GenericTicketConnector(object):
             self.endpoint, self._pack_req(xml_req_root),
             {'Content-Type': 'text/xml;charset=utf-8'})
 
-        if (sys.version_info[0] == 2 and sys.version_info < (2,7,9)) or sys.version_info < (3,4,3):
+        if (sys.version_info[0] == 3 and sys.version_info < (3,4,3)) or sys.version_info < (2,7,9):
             fd = urllib2.urlopen(request)
         else:
             fd = urllib2.urlopen(request, context=self.ssl_context)

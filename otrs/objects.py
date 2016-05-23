@@ -148,7 +148,7 @@ class DynamicField(OTRSObject):
 
 class Article(OTRSObject):
     XML_NAME = 'Article'
-    CHILD_MAP = {'Attachment': Attachment}
+    CHILD_MAP = {'Attachment': Attachment, 'DynamicField': DynamicField}
 
     def attachments(self):
         try:
@@ -156,6 +156,12 @@ class Article(OTRSObject):
         except KeyError:
             return []
 
+    def dynamicfields(self):
+        try:
+            return self.childs['DynamicField']
+        except KeyError:
+            return []			
+			
     def save_attachments(self, folder):
         """ Saves the attachments of an article to the specified folder
 
@@ -173,10 +179,17 @@ class Article(OTRSObject):
 
 class Ticket(OTRSObject):
     XML_NAME = 'Ticket'
-    CHILD_MAP = {'Article': Article}
+    CHILD_MAP = {'Article': Article, 'DynamicField': DynamicField}
 
     def articles(self):
         try:
             return self.childs['Article']
         except KeyError:
             return []
+			
+    def dynamicfields(self):
+        try:
+            return self.childs['DynamicField']
+        except KeyError:
+            return []
+

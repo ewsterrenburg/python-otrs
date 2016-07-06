@@ -100,7 +100,7 @@ class OTRSObject(object):
             e = etree.Element(k)
             if isinstance(e, str):  #  True
                 v = v.encode('utf-8')
-            e.text = str(v)
+            e.text = unicode(v)
             root.append(e)
         return root
 

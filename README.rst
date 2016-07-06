@@ -30,27 +30,30 @@ Install
 Using
 -----
 
-First make sure you installed the ``GenericTicketConnector`` webservice,
+First make sure you installed the ``GenericTicketConnectorSOAP`` webservice,
 see `official documentation`_.
+
+Note: in older versions of OTRS, GenericTicketConnectorSOAP was called GenericTicketConnector
 
 ::
 
-    from otrs.client import GenericTicketConnector
-    from otrs.objects import Ticket, Article, DynamicField, Attachment
+    from otrs.ticket.template import GenericTicketConnectorSOAP
+    from otrs.client import GenericInterfaceClient
+    from otrs.ticket.objects import Ticket, Article, DynamicField, Attachment
 
     server_uri = r'https://otrs.example.net'
-    webservice_name = 'GenericTicketConnector'
-    client = GenericTicketConnector(server_uri, webservice_name)
+    webservice_name = 'GenericTicketConnectorSOAP'
+	client = GenericInterfaceClient(server_uri, tc=GenericTicketConnectorSOAP(webservice_name))
 
 Then authenticate, you have three choices :
 
 ::
 
     # user session
-    client.user_session_register('login', 'password')
+    client.tc.SessionCreate(user_login='login', password='password')
 
     # customer_user session
-    client.customer_user_session_register('login' , 'password')
+    client.tc.SessionCreate(customer_user_login='login' , password='password')
 
     # save user in memory
     client.register_credentials(user='login', 'password')
@@ -79,7 +82,7 @@ Create a ticket :
                       ContentType=mimetype, Filename="image001.png")
     att_file.close()
 
-    t_id, t_number = client.ticket_create(t, a, [df1, df2], [att1])
+    t_id, t_number = client.tc.TicketCreate(t, a, [df1, df2], [att1])
 
 Update an article :
 
@@ -87,30 +90,30 @@ Update an article :
 
     # changes the title of the ticket
     t_upd = Ticket(Title='Updated ticket')
-    client.ticket_update(t_id, t_upd)
+    client.tc.TicketUpdate(t_id, t_upd)
 
     # appends a new article (attachments optional)
     new_article = Article(Subject='Moar info', Body='blabla', Charset='UTF8',
                           MimeType='text/plain')
-    client.update_ticket(article=new_article, attachments=None)
+    client.tc.TicketUpdate(article=new_article, attachments=None)
 
 Search for tickets :
 
 ::
 
     # returns all the tickets of customer 42
-    tickets = client.ticket_search(CustomerID=42)
+    tickets = client.tc.TicketSearch(CustomerID=42)
 
     # returns all tickets in queue Support
     # for which Dynamic Field 'Project' starts with 'Pizza':
     df2 = DynamicField(Name='Project', Value='Pizza%', Operator="Like")
-    client.ticket_search(Queues='Support', dynamic_fields=[df_search])
+    client.tc.TicketSearch(Queues='Support', dynamic_fields=[df_search])
 
 Retrieve a ticket :
 
 ::
 
-    ticket = client.ticket_get(138, get_articles=True, get_dynamic_fields=True, get_attachments=True)
+    ticket = client.tc.TicketGet(138, get_articles=True, get_dynamic_fields=True, get_attachments=True)
     article = ticket.articles()[0]
     article.save_attachments(r'C:\temp')
 

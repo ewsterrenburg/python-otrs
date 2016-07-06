@@ -3,8 +3,6 @@ import xml.etree.ElementTree as etree
 import os
 import base64
 
-
-
 class OTRSObject(object):
     """ Represents an object for OTRS (mappable to an XML element)
     """
@@ -104,7 +102,6 @@ class OTRSObject(object):
             root.append(e)
         return root
 
-
 def extract_tagname(element):
     """ Returns the name of the tag, without namespace
 
@@ -137,59 +134,22 @@ def autocast(s):
         except ValueError:
             return s
 
+# the four functions below are here only for backward compatibility
+# with old code that imported these classes from this file
+# the classes are now in tickets/objects.py
 
-class Attachment(OTRSObject):
-    XML_NAME = 'Attachment'
+def Ticket(*args, **kwargs):
+    import ticket.objects
+    return ticket.objects.Ticket(*args, **kwargs)
 
+def Article(*args, **kwargs):
+    import ticket.objects
+    return ticket.objects.Article(*args, **kwargs)
 
-class DynamicField(OTRSObject):
-    XML_NAME = 'DynamicField'
+def DynamicField(*args, **kwargs):
+    import ticket.objects
+    return ticket.objects.DynamicField(*args, **kwargs)
 
-
-class Article(OTRSObject):
-    XML_NAME = 'Article'
-    CHILD_MAP = {'Attachment': Attachment, 'DynamicField': DynamicField}
-
-    def attachments(self):
-        try:
-            return self.childs['Attachment']
-        except KeyError:
-            return []
-
-    def dynamicfields(self):
-        try:
-            return self.childs['DynamicField']
-        except KeyError:
-            return []			
-			
-    def save_attachments(self, folder):
-        """ Saves the attachments of an article to the specified folder
-
-        @param folder  : a str, folder to save the attachments
-        """
-        for a in self.attachments():
-            fname = a.attrs['Filename']
-            fpath = os.path.join(folder, fname)
-            content = a.attrs['Content']
-            fcontent = base64.b64decode(content)
-            ffile = open(fpath, 'wb')
-            ffile.write(fcontent)
-            ffile.close()
-
-
-class Ticket(OTRSObject):
-    XML_NAME = 'Ticket'
-    CHILD_MAP = {'Article': Article, 'DynamicField': DynamicField}
-
-    def articles(self):
-        try:
-            return self.childs['Article']
-        except KeyError:
-            return []
-			
-    def dynamicfields(self):
-        try:
-            return self.childs['DynamicField']
-        except KeyError:
-            return []
-
+def Attachment(*args, **kwargs):
+    import ticket.objects
+    return ticket.objects.Attachment(*args, **kwargs)

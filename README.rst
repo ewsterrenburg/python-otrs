@@ -43,7 +43,7 @@ Note: in older versions of OTRS, GenericTicketConnectorSOAP was called GenericTi
 
     server_uri = r'https://otrs.example.net'
     webservice_name = 'GenericTicketConnectorSOAP'
-	client = GenericInterfaceClient(server_uri, tc=GenericTicketConnectorSOAP(webservice_name))
+    client = GenericInterfaceClient(server_uri, tc=GenericTicketConnectorSOAP(webservice_name))
 
 Then authenticate, you have three choices :
 

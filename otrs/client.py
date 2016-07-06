@@ -320,5 +320,5 @@ class OldGTCClass(GenericInterfaceClient):
 def GenericTicketConnector(server, webservice_name='GenericTicketConnector', ssl_context=None):
     """ DEPRECATED, ONLY HERE FOR BACKWARD COMPATIBILITY """
     from ticket.operations import SessionCreate,TicketCreate,TicketGet,TicketSearch,TicketUpdate
-    ticketconnector = WebService('GenericTicketConnector', 'http://www.otrs.org/TicketConnector', ssl_context=ssl_context, SessionCreate=SessionCreate(),TicketCreate=TicketCreate(),TicketGet=TicketGet(),TicketSearch=TicketSearch(),TicketUpdate=TicketUpdate())
+    ticketconnector = WebService(webservice_name, 'http://www.otrs.org/TicketConnector', ssl_context=ssl_context, SessionCreate=SessionCreate(),TicketCreate=TicketCreate(),TicketGet=TicketGet(),TicketSearch=TicketSearch(),TicketUpdate=TicketUpdate())
     return OldGTCClass(server,tc=ticketconnector)

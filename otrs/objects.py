@@ -3,8 +3,6 @@ import xml.etree.ElementTree as etree
 import os
 import base64
 
-
-
 class OTRSObject(object):
     """ Represents an object for OTRS (mappable to an XML element)
     """
@@ -104,7 +102,6 @@ class OTRSObject(object):
             root.append(e)
         return root
 
-
 def extract_tagname(element):
     """ Returns the name of the tag, without namespace
 
@@ -137,18 +134,16 @@ def autocast(s):
         except ValueError:
             return s
 
-
 class Attachment(OTRSObject):
     XML_NAME = 'Attachment'
-
 
 class DynamicField(OTRSObject):
     XML_NAME = 'DynamicField'
 
-
-class Article(OTRSObject):
-    XML_NAME = 'Article'
-    CHILD_MAP = {'Attachment': Attachment, 'DynamicField': DynamicField}
+class AttachmentContainer(object):
+    """ For objects that can have attachments in them (ex. ticket articles, faq
+        items) they should inherit this class in addition to OTRSObject
+    """
 
     def attachments(self):
         try:
@@ -156,12 +151,6 @@ class Article(OTRSObject):
         except KeyError:
             return []
 
-    def dynamicfields(self):
-        try:
-            return self.childs['DynamicField']
-        except KeyError:
-            return []			
-			
     def save_attachments(self, folder):
         """ Saves the attachments of an article to the specified folder
 
@@ -176,20 +165,26 @@ class Article(OTRSObject):
             ffile.write(fcontent)
             ffile.close()
 
+class DynamicFieldContainer(object):
+    """ For objects that can have dynamic fields in them (ex. tickets, articles)        they should inherit this class in addition to OTRSObject
+    """
 
-class Ticket(OTRSObject):
-    XML_NAME = 'Ticket'
-    CHILD_MAP = {'Article': Article, 'DynamicField': DynamicField}
-
-    def articles(self):
-        try:
-            return self.childs['Article']
-        except KeyError:
-            return []
-			
     def dynamicfields(self):
         try:
             return self.childs['DynamicField']
         except KeyError:
             return []
+
+
+# the two functions below are here only for backward compatibility
+# with old code that imported these classes from this file
+# the classes are now in tickets/objects.py
+
+def Ticket(*args, **kwargs):
+    import ticket.objects
+    return ticket.objects.Ticket(*args, **kwargs)
+
+def Article(*args, **kwargs):
+    import ticket.objects
+    return ticket.objects.Article(*args, **kwargs)
 

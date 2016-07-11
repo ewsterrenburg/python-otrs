@@ -4,10 +4,10 @@ except ImportError:
     import urllib2
 from posixpath import join as urljoin
 import xml.etree.ElementTree as etree
-from .objects import Ticket, OTRSObject, DynamicField, extract_tagname
+from .objects import OTRSObject, extract_tagname
 import codecs
 import sys
-
+import abc
 
 class OTRSError(Exception):
     def __init__(self, fd):
@@ -64,44 +64,56 @@ def authenticated(func):
 
     return add_auth
 
+class OperationBase(object):
+    """ Base class for OTRS operations
 
-SOAP_ENVELOPPE = """
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
-                  xmlns="http://www.otrs.org/TicketConnector/">
-  <soapenv:Header/>
-  <soapenv:Body>{}</soapenv:Body>
-</soapenv:Envelope>
-"""
-
-
-class GenericTicketConnector(object):
-    """ Client for the GenericTicketConnector SOAP API
-
-    see http://otrs.github.io/doc/manual/admin/3.3/en/html/genericinterface.html
     """
+    __metaclass__ = abc.ABCMeta
 
-    def __init__(self, server, webservice_name='GenericTicketConnector', ssl_context=None):
-        """ @param server : the http(s) URL of the root installation of OTRS
-                            (e.g: https://tickets.example.net)
+    def __init__(self, opName):
+        self.operName = opName # otrs connector operation name
+        self.wsObject = None   # web services object this operation belongs to
 
-            @param webservice_name : the name of the installed webservice
-                   (choosen by the otrs admin).
-        """
+    def __init__(self):
+        self.operName = type(self).__name__ # otrs connector operation name
+        self.wsObject  = None # web services object this operation belongs to
 
-        self.endpoint = urljoin(
-            server, 'otrs/nph-genericinterface.pl/Webservice/',
-            webservice_name)
-        self.login = None
-        self.password = None
-        self.session_id = None
-        self.ssl_context = ssl_context
+    def getWebServiceObjectAttribute(self, attribName):
+        return getattr(self.wsObject, attribName)
 
-    def register_credentials(self, login, password):
-        """ Save the identifiers in memory, they will be used with each
-            subsequent request requiring authentication
-        """
-        self.login = login
-        self.password = password
+    def getClientObjectAttribute(self, attribName):
+        return self.wsObject.getClientObjectAttribute(attribName)
+
+    def setClientObjectAttribute(self, attribName, attribValue):
+        self.wsObject.setClientObjectAttribute(attribName, attribValue)
+
+    @abc.abstractmethod
+    def __call__(self):
+        return
+
+    @property
+    def endpoint(self):
+        return self.getWebServiceObjectAttribute('endpoint')
+
+    @property
+    def login(self):
+        return self.getClientObjectAttribute('login')
+
+    @property
+    def password(self):
+        return self.getClientObjectAttribute('password')
+
+    @property
+    def session_id(self):
+        return self.getClientObjectAttribute('session_id')
+
+    @session_id.setter
+    def session_id(self, sessionid):
+        self.setClientObjectAttribute('session_id', sessionid)
+
+    @property
+    def soap_envelope(self):
+        return '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns= "' + self.getWebServiceObjectAttribute('wsNamespace') + '"><soapenv:Header/><soapenv:Body>{}</soapenv:Body></soapenv:Envelope>'
 
     def req(self, reqname, *args, **kwargs):
         """ Wrapper arround a SOAP request
@@ -174,185 +186,140 @@ class GenericTicketConnector(object):
         """
         return element.getchildren()[0].getchildren()[0].getchildren()[0]
 
-    @staticmethod
-    def _pack_req(element):
+    def _pack_req(self, element):
         """
         @param element : a etree.Element
         @returns       : a string, wrapping element within the request tags
 
         """
-        return SOAP_ENVELOPPE.format(codecs.decode(etree.tostring(element),'utf-8')).encode('utf-8')
+        return self.soap_envelope.format(codecs.decode(etree.tostring(element),'utf-8')).encode('utf-8')
+
+class WebService(object):
+    """ Base class for OTRS Web Service
+
+    """
+
+    def __init__(self, wsName, wsNamespace, **kwargs):
+        self.clientObject = None # link to parent client object
+        self.wsName = wsName     # name for OTRS web service
+        self.wsNamespace = wsNamespace # OTRS namespace url
+
+        # add all variables in kwargs into the local dictionary
+        self.__dict__.update(kwargs)
+
+        # for operations, set backlinks to their associated webservice
+        for arg in kwargs:
+            if isinstance(getattr(self, arg), OperationBase):
+                getattr(self, arg).wsObject = self
+                # if attribute is type OperationBase, set backlink to WebService
+
+        # set defaults if attributes are not present
+        if not hasattr(self, 'wsRequestNameScheme'):
+            self.wsRequestNameScheme = '<FunctionName>DATA</FunctionName>'
+        if not hasattr(self, 'wsResponseNameScheme'):
+            self.wsResponseNameScheme = '<FunctionNameResponse>DATA</FunctionNameResponse>'
+
+    def getClientObjectAttribute(self, attribName):
+        return getattr(self.clientObject,attribName)
+
+    def setClientObjectAttribute(self, attribName, attribValue):
+        setattr(self.clientObject,attribName,attribValue)
+
+    @property
+    def endpoint(self):
+        return urljoin(self.getClientObjectAttribute('giurl'),self.wsName)
+
+
+class GenericInterfaceClient(object):
+    """ Client for the OTRS Generic Interface
+
+    """
+
+    def __init__(self, server, **kwargs):
+        """ @param server : the http(s) URL of the root installation of OTRS
+                            (e.g: https://tickets.example.net)
+        """
+
+        # add all variables in kwargs into the local dictionary
+        self.__dict__.update(kwargs)
+
+        # for webservices attached to this client object, backlink them
+        # to this client object to allow access to session login/password
+
+        for arg in kwargs:
+             if isinstance(getattr(self, arg), WebService):
+                getattr(self, arg).clientObject = self # set backlink for web services to this obj
+        self.login = None
+        self.password = None
+        self.session_id = None
+        self.giurl = urljoin(
+            server, 'otrs/nph-genericinterface.pl/Webservice/')
+
+    def register_credentials(self, login, password):
+        """ Save the identifiers in memory, they will be used with each
+            subsequent request requiring authentication
+        """
+        self.login = login
+        self.password = password
+
+class OldGTCClass(GenericInterfaceClient):
+    """ Old deprecated generic ticket connector class, used for
+        backward compatibility with previous versions. All
+        methods in here are deprecated
+    """
 
     def session_create(self, password, user_login=None,
                                        customer_user_login=None):
-        """ Logs the user or customeruser in
+        """ DEPRECATED - Logs the user or customeruser in
 
         @returns the session_id
         """
-        if user_login:
-            ret = self.req('SessionCreate',
-                           UserLogin=user_login,
-                           Password=password)
-        else:
-            ret = self.req('SessionCreate',
-                           CustomerUserLogin=customer_user_login,
-                           Password=password)
-        signal = self._unpack_resp_one(ret)
-        session_id = signal.text
-        return session_id
+        self.tc.SessionCreate(password,user_login=user_login,customer_user_login=customer_user_login)
 
     def user_session_register(self, user, password):
         """ Logs the user in and stores the session_id for subsequent requests
+            DEPRECATED
         """
-        self.session_id = self.session_create(
+        self.session_create(
             password=password,
             user_login=user)
 
     def customer_user_session_register(self, user, password):
         """ Logs the customer_user in and stores the session_id for subsequent
-        requests.
+        requests. DEPRECATED
         """
-        self.session_id = self.session_create(
+        self.session_create(
             password=password,
             customer_user_login=user)
 
     @authenticated
-    def ticket_get(self, ticket_id, get_articles=False,
-                   get_dynamic_fields=False,
-                   get_attachments=False, *args, **kwargs):
-        """ Get a ticket by id ; beware, TicketID != TicketNumber
+    def ticket_create(self, ticket, article, dynamic_fields=None,
+                      attachments=None, **kwargs):
+        # ticket_create is deprecated, for backward compat, calls new method
+        return self.tc.TicketCreate(ticket, article, dynamic_fields=dynamic_fields, attachments=attachments, **kwargs)
 
-        @param ticket_id : the TicketID of the ticket
-        @param get_articles : grab articles linked to the ticket
-        @param get_dynamic_fields : include dynamic fields in result
-        @param get_attachments : include attachments in result
-
-        @return a `Ticket`, Ticket.articles() will give articles if relevant.
-        Ticket.articles()[i].attachments() will return the attachments for
-        an article, wheres Ticket.articles()[i].save_attachments(<folderpath>)
-        will save the attachments of article[i] to the specified folder.
-        """
-        params = {'TicketID': str(ticket_id)}
-        params.update(kwargs)
-        if get_articles:
-            params['AllArticles'] = True
-        if get_dynamic_fields:
-            params['DynamicFields'] = True
-        if get_attachments:
-            params['Attachments'] = True
-
-        ret = self.req('TicketGet', **params)
-        return Ticket.from_xml(self._unpack_resp_one(ret))
+    @authenticated
+    def ticket_get(self, ticket_id, get_articles=False, get_dynamic_fields=False, get_attachments=False, *args, **kwargs):
+        # ticket_get is deprecated, for backward compat, calls new method
+        return self.tc.TicketGet(ticket_id, get_articles=get_articles, get_dynamic_fields=get_dynamic_fields, get_attachments=get_attachments, *args, **kwargs)
 
     @authenticated
     def ticket_search(self, dynamic_fields=None, **kwargs):
-        """
-        @param dynamic_fields a list of Dynamic Fields, in addition to
-        the combination of `Name` and `Value`, also an `Operator` for the
-        comparison is expexted `Equals`, `Like`, `GreaterThan`,
-        `GreaterThanEquals`, `SmallerThan` or `SmallerThanEquals`.
-        The `Like` operator accepts a %-sign as wildcard.
-        @returns a list of matching TicketID
-        """
-        df_search_list = []
-        dynamic_field_requirements = ('Name', 'Value', 'Operator')
-        if not (dynamic_fields is None):
-            for df in dynamic_fields:
-                df.check_fields(dynamic_field_requirements)
-                if df.Operator == 'Equals':
-                    df_search = DynamicField(Equals=df.Value)
-                elif df.Operator == 'Like':
-                    df_search = DynamicField(Like=df.Value)
-                elif df.Operator == 'GreaterThan':
-                    df_search = DynamicField(GreaterThan=df.Value)
-                elif df.Operator == 'GreaterThanEquals':
-                    df_search = DynamicField(GreaterThanEquals=df.Value)
-                elif df.Operator == 'SmallerThan':
-                    df_search = DynamicField(SmallerThan=df.Value)
-                elif df.Operator == 'SmallerThan':
-                    df_search = DynamicField(SmallerThan=df.Value)
-                else:
-                    raise WrongOperatorException()
-                df_search.XML_NAME = 'DynamicField_{0}'.format(df.Name)
-                df_search_list.append(df_search)
-            kwargs['DynamicFields'] = df_search_list
-
-        ret = self.req('TicketSearch', **kwargs)
-        return [int(i.text) for i in self._unpack_resp_several(ret)]
-
-    @authenticated
-    def ticket_create(self, ticket, article, dynamic_fields=None,
-                      attachments=None, **kwargs):
-        """
-        @param ticket a Ticket
-        @param article an Article
-        @param dynamic_fields a list of Dynamic Fields
-        @param attachments a list of Attachments
-        @returns the ticketID, TicketNumber
-        """
-        ticket_requirements = (
-            ('StateID', 'State'), ('PriorityID', 'Priority'),
-            ('QueueID', 'Queue'), )
-        article_requirements = ('Subject', 'Body', 'Charset', 'MimeType')
-        dynamic_field_requirements = ('Name', 'Value')
-        attachment_field_requirements = ('Content', 'ContentType', 'Filename')
-        ticket.check_fields(ticket_requirements)
-        article.check_fields(article_requirements)
-        if not (dynamic_fields is None):
-            for df in dynamic_fields:
-                df.check_fields(dynamic_field_requirements)
-        if not (attachments is None):
-            for att in attachments:
-                att.check_fields(attachment_field_requirements)
-        ret = self.req('TicketCreate', ticket=ticket, article=article,
-                       dynamic_fields=dynamic_fields,
-                       attachments=attachments, **kwargs)
-        elements = self._unpack_resp_several(ret)
-        infos = {extract_tagname(i): int(i.text) for i in elements}
-        return infos['TicketID'], infos['TicketNumber']
+        # ticket_search is deprecated, for backward compat, calls new method
+        return self.tc.TicketSearch(dynamic_fields=dynamic_fields, **kwargs)
 
     @authenticated
     def ticket_update(self, ticket_id=None, ticket_number=None,
                       ticket=None, article=None, dynamic_fields=None,
                       attachments=None, **kwargs):
-        """
-        @param ticket_id the ticket ID of the ticket to modify
-        @param ticket_number the ticket Number of the ticket to modify
-        @param ticket a ticket containing the fields to change on ticket
-        @param article a new Article to append to the ticket
-        @param dynamic_fields a list of Dynamic Fields to change on ticket
-        @param attachments a list of Attachments for a newly appended article
-        @returns the ticketID, TicketNumber
+        # ticket_update is deprecated, for backward compat, calls new method
+        return self.tc.TicketUpdate(ticket_id=ticket_id, ticket_number=ticket_number,
+                      ticket=ticket, article=article, dynamic_fields=dynamic_fields,
+                      attachments=attachments, **kwargs)
 
-
-        Mandatory : - `ticket_id` xor `ticket_number`
-                    - `ticket` or `article` or `dynamic_fields`
-
-        """
-        if not (ticket_id is None):
-            kwargs['TicketID'] = ticket_id
-        elif not (ticket_number is None):
-            kwargs['TicketNumber'] = ticket_number
-        else:
-            raise ValueError('requires either ticket_id or ticket_number')
-
-        if (ticket is None) and (article is None) and (dynamic_fields is None):
-            raise ValueError(
-                'requires at least one among ticket, article, dynamic_fields')
-        elif (article is None) and not (attachments is None):
-            raise ValueError(
-                'Attachments can only be created for a newly appended article')
-        else:
-            if (ticket):
-                kwargs['Ticket'] = ticket
-            if (article):
-                kwargs['Article'] = article
-            if (dynamic_fields):
-                kwargs['DynamicField'] = dynamic_fields
-            if (attachments):
-                kwargs['Attachment'] = attachments
-
-        ret = self.req('TicketUpdate', **kwargs)
-        elements = self._unpack_resp_several(ret)
-        infos = {extract_tagname(i): int(i.text) for i in elements}
-        return infos['TicketID'], infos['TicketNumber']
+def GenericTicketConnector(server, webservice_name='GenericTicketConnector', ssl_context=None):
+    """ DEPRECATED, ONLY HERE FOR BACKWARD COMPATIBILITY """
+    from ticket.operations import TicketCreate,TicketGet,TicketSearch,TicketUpdate
+    from session.operations import SessionCreate
+    ticketconnector = WebService(webservice_name, 'http://www.otrs.org/TicketConnector', ssl_context=ssl_context, SessionCreate=SessionCreate(),TicketCreate=TicketCreate(),TicketGet=TicketGet(),TicketSearch=TicketSearch(),TicketUpdate=TicketUpdate())
+    return OldGTCClass(server,tc=ticketconnector)

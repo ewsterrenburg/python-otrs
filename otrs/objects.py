@@ -134,7 +134,49 @@ def autocast(s):
         except ValueError:
             return s
 
-# the four functions below are here only for backward compatibility
+class Attachment(OTRSObject):
+    XML_NAME = 'Attachment'
+
+class DynamicField(OTRSObject):
+    XML_NAME = 'DynamicField'
+
+class AttachmentContainer(object):
+    """ For objects that can have attachments in them (ex. ticket articles, faq
+        items) they should inherit this class in addition to OTRSObject
+    """
+
+    def attachments(self):
+        try:
+            return self.childs['Attachment']
+        except KeyError:
+            return []
+
+    def save_attachments(self, folder):
+        """ Saves the attachments of an article to the specified folder
+
+        @param folder  : a str, folder to save the attachments
+        """
+        for a in self.attachments():
+            fname = a.attrs['Filename']
+            fpath = os.path.join(folder, fname)
+            content = a.attrs['Content']
+            fcontent = base64.b64decode(content)
+            ffile = open(fpath, 'wb')
+            ffile.write(fcontent)
+            ffile.close()
+
+class DynamicFieldContainer(object):
+    """ For objects that can have dynamic fields in them (ex. tickets, articles)        they should inherit this class in addition to OTRSObject
+    """
+
+    def dynamicfields(self):
+        try:
+            return self.childs['DynamicField']
+        except KeyError:
+            return []
+
+
+# the two functions below are here only for backward compatibility
 # with old code that imported these classes from this file
 # the classes are now in tickets/objects.py
 
@@ -146,10 +188,3 @@ def Article(*args, **kwargs):
     import ticket.objects
     return ticket.objects.Article(*args, **kwargs)
 
-def DynamicField(*args, **kwargs):
-    import ticket.objects
-    return ticket.objects.DynamicField(*args, **kwargs)
-
-def Attachment(*args, **kwargs):
-    import ticket.objects
-    return ticket.objects.Attachment(*args, **kwargs)

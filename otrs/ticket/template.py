@@ -1,4 +1,5 @@
-from .operations import SessionCreate,TicketCreate,TicketGet,TicketSearch,TicketUpdate
+from .operations import TicketCreate,TicketGet,TicketSearch,TicketUpdate
+from ..session.operations import SessionCreate
 from ..client import WebService
 
 def GenericTicketConnectorSOAP(webservice_name='GenericTicketConnectorSOAP'):

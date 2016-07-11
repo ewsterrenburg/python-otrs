@@ -166,6 +166,15 @@ Retrieve a public FAQ article by ID
     print myfaqitem.Field2
 	# saves attachments to folder ./tempattach
     myfaqitem.save_attachments('./tempattach')
+
+Search for an FAQ article
+	
+::
+
+    #find all FAQ articles with Windows in title:
+	results = client.fc.PublicFAQSearch(Title='*Windows*')
+	for faqitemid in results:
+	    print "Found FAQ item ID containing Windows: " + str(faqitemid)
 	
 	
 Custom Web Service Connectors
@@ -198,7 +207,7 @@ in step 5 above as the second parameter to the WebService() call.
 ::
 
     from otrs.faq.operations import LanguageList,PublicCategoryList,PublicFAQGet,PublicFAQSearch
-	from otrs.session.operations import SessionCreate
+    from otrs.session.operations import SessionCreate
     from otrs.client import WebService
 
     def ImprovedFAQConnectorSOAP(webservice_name='ImprovedFAQConnectorSOAP'):

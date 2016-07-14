@@ -8,16 +8,16 @@ Features
 
 -  Implements fully communication with the ``GenericTicketConnectorSOAP`` and ``GenericFAQConnectorSOAP``
    provided as webservice example by OTRS;
--  dynamic fields and attachments are supported;
--  authentication is handled programmatically, per-request or per-session;
--  calls are wrapped in OTRSClient methods;
+-  Dynamic fields and attachments are supported;
+-  Authentication is handled programmatically, per-request or per-session;
+-  Calls are wrapped in OTRSClient methods;
 -  OTRS XML objects are mapped to Python-style objects.
 
 To be done
 ----------
 
 -  Test for python3 compatibility and make resulting changes;
--  improve and extend ``tests.py``;
+-  Improve and extend ``tests.py``.
 
 Install
 -------
@@ -56,7 +56,7 @@ Then authenticate, you have three choices :
     client.tc.SessionCreate(customer_user_login='login' , password='password')
 
     # save user in memory
-    client.register_credentials(user='login', 'password')
+    client.register_credentials(user='login', password='password')
 
 Play !
 
@@ -155,7 +155,7 @@ List FAQ Categories that have Public FAQ items in them:
     for category in catlist:
         print category.ID, category.Name
 
-Retrieve a public FAQ article by ID
+Retrieve a pubblic FAQ article by ID
 (note: FAQ Item ID is not the same as the item number!)
 
 ::

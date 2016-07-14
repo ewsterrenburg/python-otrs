@@ -1,26 +1,19 @@
-""" Session:: operations
+"""OTRS :: session :: operations."""
+from otrs.client import OperationBase
 
-"""
-
-from ..client import OperationBase, authenticated
-from ..objects import extract_tagname
 
 class Session(OperationBase):
-    """ Base class for OTRS Session:: operations
+    """Base class for OTRS Session:: operations."""
 
-    """
 
 class SessionCreate(Session):
-    """ Class to handle OTRS Session::SessionCreate operation
-
-    """
+    """Class to handle OTRS Session::SessionCreate operation."""
 
     def __call__(self, password, user_login=None, customer_user_login=None):
-        """ Logs the user or customeruser in
+        """Create an User session or CustomerUser session.
 
         @returns the session_id
         """
-
         if user_login:
             ret = self.req('SessionCreate',
                            UserLogin=user_login,
@@ -35,5 +28,6 @@ class SessionCreate(Session):
         # sets the session id for the entire client to this
         self.session_id = session_id
 
-        # returns the session id in case you want it, but its not normally needed
+        # returns the session id in case you want it,
+        # but its not normally needed
         return session_id

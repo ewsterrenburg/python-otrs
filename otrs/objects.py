@@ -1,22 +1,26 @@
+"""OTRS :: objects."""
 from __future__ import unicode_literals
 import xml.etree.ElementTree as etree
 import os
+import sys
 import base64
 
+
 class OTRSObject(object):
-    """ Represents an object for OTRS (mappable to an XML element)
-    """
+    """Represents an object for OTRS (mappable to an XML element)."""
 
     # Map : {'TagName' -> Class}
-
     CHILD_MAP = {}
 
     def __init__(self, *args, **kwargs):
+        """Initialize OTRS Object."""
         self.attrs = kwargs
         self.childs = {}
 
     def __getattr__(self, k):
-        """ attrs are simple xml child tags (<tag>val</tag>), complex children,
+        """Get an attribute for aan OTRSObject.
+
+        attrs are simple xml child tags (<tag>val</tag>), complex children,
         are accessible via dedicated methods.
 
         @returns a simple type
@@ -25,7 +29,8 @@ class OTRSObject(object):
 
     @classmethod
     def from_xml(cls, xml_element):
-        """
+        """Create an OTRS Object from xml.
+
         @param xml_element an etree.Element
         @returns an OTRSObject
         """
@@ -55,7 +60,8 @@ class OTRSObject(object):
         return obj
 
     def add_child(self, childobj):
-        """
+        """Add a child object to an OTRS Object.
+
         @param childobj : an OTRSObject
         """
         xml_name = childobj.XML_NAME
@@ -66,7 +72,8 @@ class OTRSObject(object):
             self.childs[xml_name] = [childobj]
 
     def check_fields(self, fields):
-        """ Checks that the list of fields is bound
+        """Check that the list of fields is bound.
+
         @param fields rules, as list
 
         items n fields can be either :
@@ -90,20 +97,25 @@ class OTRSObject(object):
                 raise ValueError('{} should be filled'.format(i))
 
     def to_xml(self):
-        """
+        """Create an XML representation of an OTRS Object.
+
         @returns am etree.Element
         """
         root = etree.Element(self.XML_NAME)
         for k, v in self.attrs.items():
             e = etree.Element(k)
-            if isinstance(e, str):  #  True
+            if isinstance(e, str):
                 v = v.encode('utf-8')
-            e.text = unicode(v)
+            if sys.version_info[0] == 3:
+                e.text = str(v)
+            else:
+                e.text = unicode(v)
             root.append(e)
         return root
 
+
 def extract_tagname(element):
-    """ Returns the name of the tag, without namespace
+    """Return the name of the tag, without namespace.
 
     element.tag lib gives "{namespace}tagname", we want only "tagname"
 
@@ -116,16 +128,15 @@ def extract_tagname(element):
     except IndexError:
         # if it's not namespaced, then return the tag name itself
         return element.tag
-        #raise ValueError('"{}" is not a tag name'.format(qualified_name))
+        # raise ValueError('"{}" is not a tag name'.format(qualified_name))
 
 
 def autocast(s):
-    """ Tries to guess the simple type and convert the value to it.
+    """Try to guess the simple type and convert the value to it.
 
     @param s string
     @returns the relevant type : a float, string or int
     """
-
     try:
         return int(s)
     except ValueError:
@@ -134,25 +145,37 @@ def autocast(s):
         except ValueError:
             return s
 
+
 class Attachment(OTRSObject):
+    """An OTRS attachment."""
+
     XML_NAME = 'Attachment'
 
+
 class DynamicField(OTRSObject):
+    """An OTRS dynamic field."""
+
     XML_NAME = 'DynamicField'
 
+
 class AttachmentContainer(object):
-    """ For objects that can have attachments in them (ex. ticket articles, faq
-        items) they should inherit this class in addition to OTRSObject
+    """For objects that can have attachments in them (ex. tickets, articles).
+
+    They should inherit this class in addition to OTRSObject.
     """
 
     def attachments(self):
+        """Return the dynamic fields for an object ket as a list.
+
+        @returns a list of Attachment objects.
+        """
         try:
             return self.childs['Attachment']
         except KeyError:
             return []
 
     def save_attachments(self, folder):
-        """ Saves the attachments of an article to the specified folder
+        """Save the attachments of an article to the specified folder.
 
         @param folder  : a str, folder to save the attachments
         """
@@ -165,11 +188,18 @@ class AttachmentContainer(object):
             ffile.write(fcontent)
             ffile.close()
 
+
 class DynamicFieldContainer(object):
-    """ For objects that can have dynamic fields in them (ex. tickets, articles)        they should inherit this class in addition to OTRSObject
+    """For objects that can have dynamic fields in them (ex. tickets, articles).
+
+    They should inherit this class in addition to OTRSObject.
     """
 
     def dynamicfields(self):
+        """Return the dynamic fields for an object ket as a list.
+
+        @returns a list of DynamicField objects.
+        """
         try:
             return self.childs['DynamicField']
         except KeyError:
@@ -180,11 +210,14 @@ class DynamicFieldContainer(object):
 # with old code that imported these classes from this file
 # the classes are now in tickets/objects.py
 
+
 def Ticket(*args, **kwargs):
+    """Return an OTRS ticket."""
     import ticket.objects
     return ticket.objects.Ticket(*args, **kwargs)
 
+
 def Article(*args, **kwargs):
+    """Return an OTRS article."""
     import ticket.objects
     return ticket.objects.Article(*args, **kwargs)
-

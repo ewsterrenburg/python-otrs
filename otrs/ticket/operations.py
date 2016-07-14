@@ -1,26 +1,21 @@
-""" Ticket:: Operations
+"""OTRS :: ticket :: operations."""
+from otrs.ticket.objects import Ticket as TicketObject
+from otrs.client import OperationBase, authenticated, WrongOperatorException
+from otrs.objects import extract_tagname, DynamicField
 
-"""
-
-from .objects import Ticket as TicketObject
-from ..client import OperationBase, authenticated
-from ..objects import extract_tagname
 
 class Ticket(OperationBase):
+    """Base class for OTRS Ticket:: operations."""
 
-    """ Base class for OTRS Ticket:: operations
-
-    """
 
 class TicketCreate(Ticket):
-    """ Class to handle OTRS Ticket::TicketCreate operation
-
-    """
+    """Class to handle OTRS Ticket::TicketCreate operation."""
 
     @authenticated
     def __call__(self, ticket, article, dynamic_fields=None,
-                      attachments=None, **kwargs):
-        """
+                 attachments=None, **kwargs):
+        """Create a new ticket.
+
         @param ticket a Ticket
         @param article an Article
         @param dynamic_fields a list of Dynamic Fields
@@ -50,15 +45,13 @@ class TicketCreate(Ticket):
 
 
 class TicketGet(Ticket):
-    """ Class to handle OTRS Ticket::TicketGet operation
-
-    """
+    """Class to handle OTRS Ticket::TicketGet operation."""
 
     @authenticated
     def __call__(self, ticket_id, get_articles=False,
-                   get_dynamic_fields=False,
-                   get_attachments=False, *args, **kwargs):
-        """ Get a ticket by id ; beware, TicketID != TicketNumber
+                 get_dynamic_fields=False,
+                 get_attachments=False, *args, **kwargs):
+        """Get a ticket by id ; beware, TicketID != TicketNumber.
 
         @param ticket_id : the TicketID of the ticket
         @param get_articles : grab articles linked to the ticket
@@ -84,13 +77,12 @@ class TicketGet(Ticket):
 
 
 class TicketSearch(Ticket):
-    """ Class to handle OTRS Ticket::TicketSearch operation
-
-    """
+    """Class to handle OTRS Ticket::TicketSearch operation."""
 
     @authenticated
     def __call__(self, dynamic_fields=None, **kwargs):
-        """
+        """Search for a ticket by.
+
         @param dynamic_fields a list of Dynamic Fields, in addition to
         the combination of `Name` and `Value`, also an `Operator` for the
         comparison is expexted `Equals`, `Like`, `GreaterThan`,
@@ -124,16 +116,16 @@ class TicketSearch(Ticket):
         ret = self.req('TicketSearch', **kwargs)
         return [int(i.text) for i in self._unpack_resp_several(ret)]
 
-class TicketUpdate(Ticket):
-    """ Class to handle OTRS Ticket::TicketUpdate operation
 
-    """
+class TicketUpdate(Ticket):
+    """Class to handle OTRS Ticket::TicketUpdate operation."""
 
     @authenticated
     def __call__(self, ticket_id=None, ticket_number=None,
-                      ticket=None, article=None, dynamic_fields=None,
-                      attachments=None, **kwargs):
-        """
+                 ticket=None, article=None, dynamic_fields=None,
+                 attachments=None, **kwargs):
+        """Update an existing ticket.
+
         @param ticket_id the ticket ID of the ticket to modify
         @param ticket_number the ticket Number of the ticket to modify
         @param ticket a ticket containing the fields to change on ticket

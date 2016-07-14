@@ -1,61 +1,48 @@
-""" FAQ:: Operations
+"""OTRS :: faq :: operations."""
+from otrs.faq.objects import Category as CategoryObject
+from otrs.faq.objects import Language as LanguageObject
+from otrs.faq.objects import FAQItem as FAQItemObject
+from otrs.client import OperationBase, authenticated
 
-"""
-
-from .objects import Category as CategoryObject, Language as LanguageObject, FAQItem as FAQItemObject
-from ..client import OperationBase, authenticated
-from ..objects import extract_tagname
 
 class FAQ(OperationBase):
+    """Base class for OTRS FAQ:: operations."""
 
-    """ Base class for OTRS FAQ:: operations
-
-    """
 
 class LanguageList(FAQ):
-    """ Class to handle OTRS ITSM FAQ::LanguageList operation
-
-    """
+    """Class to handle OTRS ITSM FAQ::LanguageList operation."""
 
     @authenticated
     def __call__(self, *args, **kwargs):
-        """ Returns the Language List from FAQ
+        """Return the Language List from FAQ.
 
         @returns list of languages
         """
-
         ret = self.req('LanguageList', **kwargs)
         elements = self._unpack_resp_several(ret)
         return [LanguageObject.from_xml(language) for language in elements]
 
 
-
 class PublicCategoryList(FAQ):
-    """ Class to handle OTRS ITSM FAQ::PublicCategoryList operation
-
-    """
+    """Class to handle OTRS ITSM FAQ::PublicCategoryList operation."""
 
     @authenticated
     def __call__(self, **kwargs):
-        """ Returns the Public Category List from FAQ
+        """Return the Public Category List from FAQ.
 
         @returns list of category objects
         """
-
         ret = self.req('PublicCategoryList', **kwargs)
         elements = self._unpack_resp_several(ret)
         return [CategoryObject.from_xml(category) for category in elements]
 
 
-
 class PublicFAQGet(FAQ):
-    """ Class to handle OTRS ITSM FAQ::PublicFAQGet operation
-
-    """
+    """Class to handle OTRS ITSM FAQ::PublicFAQGet operation."""
 
     @authenticated
     def __call__(self, item_id, get_attachments=False, **kwargs):
-        """ Get a public FAQItem by id
+        """Get a public FAQItem by id.
 
         @param item_id : the ItemID of the public FAQItem
                                NOTE: ItemID != FAQ Number
@@ -72,16 +59,15 @@ class PublicFAQGet(FAQ):
         ret = self.req('PublicFAQGet', **params)
         return FAQItemObject.from_xml(self._unpack_resp_one(ret))
 
-class PublicFAQSearch(FAQ):
-    """ Class to handle OTRS ITSM FAQ::PublicFAQSearch operation
 
-    """
+class PublicFAQSearch(FAQ):
+    """Class to handle OTRS ITSM FAQ :: PublicFAQSearch operation."""
 
     @authenticated
     def __call__(self, *args, **kwargs):
-        """
+        """Search for matching public FAQItems.
+
         @returns a list of matching public FAQItem IDs
         """
-
         ret = self.req('PublicFAQSearch', **kwargs)
         return [int(i.text) for i in self._unpack_resp_several(ret)]

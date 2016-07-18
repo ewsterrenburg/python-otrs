@@ -127,18 +127,23 @@ class OperationBase(object):
         return self.getClientObjectAttribute('password')
 
     @property
+    def ssl_context(self):
+        """Return ssl_context of the clientobject of the WebService."""
+        return self.getClientObjectAttribute('ssl_context')
+
+    @property
     def session_id(self):
-        """Return session_id of WebService object."""
+        """Return session_id of the clientobject of the WebService object."""
         return self.getClientObjectAttribute('session_id')
 
     @session_id.setter
     def session_id(self, sessionid):
-        """Set session_id of WebService object."""
+        """Set session_id of the clientobject of the WebService object."""
         self.setClientObjectAttribute('session_id', sessionid)
 
     @property
     def soap_envelope(self):
-        """Return session_id of WebService object."""
+        """Return soap envelope for WebService object."""
         soap_envelope = '<soapenv:Envelope ' +  \
             'xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" ' + \
             'xmlns= "' + self.getWebServiceObjectAttribute('wsNamespace') + \
@@ -272,7 +277,7 @@ class WebService(object):
 class GenericInterfaceClient(object):
     """Client for the OTRS Generic Interface."""
 
-    def __init__(self, server, **kwargs):
+    def __init__(self, server, ssl_context=None, **kwargs):
         """Initialize GenericInterfaceClient.
 
         @param server : the http(s) URL of the root installation of OTRS
@@ -291,6 +296,7 @@ class GenericInterfaceClient(object):
         self.login = None
         self.password = None
         self.session_id = None
+        self.ssl_context = ssl_context
         self.giurl = urljoin(
             server, 'otrs/nph-genericinterface.pl/Webservice/')
 

@@ -213,11 +213,11 @@ class DynamicFieldContainer(object):
 
 def Ticket(*args, **kwargs):
     """Return an OTRS ticket."""
-    import ticket.objects
-    return ticket.objects.Ticket(*args, **kwargs)
+    import otrs.ticket.objects
+    return otrs.ticket.objects.Ticket(*args, **kwargs)
 
 
 def Article(*args, **kwargs):
     """Return an OTRS article."""
-    import ticket.objects
-    return ticket.objects.Article(*args, **kwargs)
+    import otrs.ticket.objects
+    return otrs.ticket.objects.Article(*args, **kwargs)

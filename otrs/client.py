@@ -1,8 +1,10 @@
 """OTRS :: client."""
 try:
     import urllib.request as urllib2
+    import http.client as httplib
 except ImportError:
     import urllib2
+    import httplib
 from posixpath import join as urljoin
 import xml.etree.ElementTree as etree
 from otrs.objects import OTRSObject, extract_tagname
@@ -22,6 +24,19 @@ class OTRSError(Exception):
     def __str__(self):
         """Return error message for OTRS Error."""
         return '{} : {}'.format(self.code, self.msg)
+
+
+class BadStatusLineError(Exception):
+    """Base class for BadStatusLineError Errors."""
+
+    def __init__(self, url):
+        """Initialize BadStatusLineError Error."""
+        self.url = url
+
+    def __str__(self):
+        """Return error message for BadStatusLine Error."""
+        return '''BadStatusLine Exception when trying to reach {0}.
+            Are you using the correct webservice name?'''.format(self.url)
 
 
 class SOAPError(OTRSError):
@@ -183,11 +198,14 @@ class OperationBase(object):
             self.endpoint, self._pack_req(xml_req_root),
             {'Content-Type': 'text/xml;charset=utf-8'})
 
-        if ((sys.version_info[0] == 3 and sys.version_info < (3, 4, 3)) or
-                (sys.version_info < (2, 7, 9))):
-            fd = urllib2.urlopen(request)
-        else:
-            fd = urllib2.urlopen(request, context=self.ssl_context)
+        try:
+            if ((sys.version_info[0] == 3 and sys.version_info < (3, 4, 3)) or
+                    (sys.version_info < (2, 7, 9))):
+                fd = urllib2.urlopen(request)
+            else:
+                fd = urllib2.urlopen(request, context=self.ssl_context)
+        except httplib.BadStatusLine:
+            raise BadStatusLineError(request.get_full_url())
 
         if fd.getcode() != 200:
             raise OTRSError(fd)

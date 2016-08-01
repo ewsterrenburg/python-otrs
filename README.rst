@@ -20,6 +20,10 @@ To be done
 -  Test for python3 compatibility and make resulting changes;
 -  improve and extend ``tests.py``;
 
+Compatibility
+--------
+-  Python 2.7;
+
 Install
 -------
 

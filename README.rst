@@ -22,6 +22,7 @@ To be done
 Compatibility
 --------
 -  Python 2.7;
+-  Python 3.5;
 
 Install
 -------

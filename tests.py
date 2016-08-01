@@ -2,8 +2,9 @@ import unittest
 import os
 import xml.etree.ElementTree as etree
 
-from otrs.client import GenericTicketConnector
-from otrs.objects import Ticket, Article
+from otrs.client import GenericInterfaceClient
+from otrs.ticket.template import GenericTicketConnectorSOAP
+from otrs.ticket.objects import Ticket, Article
 
 REQUIRED_VARS = 'OTRS_LOGIN', 'OTRS_PASSWORD', 'OTRS_SERVER', 'OTRS_WEBSERVICE'
 MISSING_VARS = []
@@ -168,21 +169,21 @@ if not MISSING_VARS:
 
     class TestOTRSAPI(unittest.TestCase):
         def setUp(self):
-            self.c = GenericTicketConnector(OTRS_SERVER, OTRS_WEBSERVICE)
+            self.c = GenericInterfaceClient(OTRS_SERVER, tc=GenericTicketConnectorSOAP(OTRS_WEBSERVICE))
             self.c.register_credentials(OTRS_LOGIN, OTRS_PASSWORD)
 
         def test_session_create(self):
-            sessid = self.c.session_create(user_login=OTRS_LOGIN,
-                                           password=OTRS_PASSWORD)
+            sessid = self.c.tc.SessionCreate(user_login=OTRS_LOGIN,
+                                             password=OTRS_PASSWORD)
             self.assertEqual(len(sessid), 32)
 
         def test_ticket_get(self):
-            t = self.c.ticket_get(1)
+            t = self.c.tc.TicketGet(1)
             self.assertEqual(t.TicketID, 1)
             self.assertEqual(t.StateType, 'new')
 
         def test_ticket_get_with_articles(self):
-            t = self.c.ticket_get(1, get_articles=True)
+            t = self.c.tc.TicketGet(1, get_articles=True)
             self.assertEqual(t.TicketID, 1)
             self.assertEqual(t.StateType, 'new')
             articles = t.articles()
@@ -191,7 +192,7 @@ if not MISSING_VARS:
             self.assertEqual(articles[0].SenderType, 'customer')
 
         def test_ticket_search(self):
-            t_list = self.c.ticket_search(Title='Welcome to OTRS!')
+            t_list = self.c.tc.TicketSearch(Title='Welcome to OTRS!')
             self.assertIsInstance(t_list, list)
             self.assertIn(1, t_list)
 
@@ -206,7 +207,7 @@ if not MISSING_VARS:
                         Body='bla',
                         Charset='UTF8',
                         MimeType='text/plain')
-            t_id, t_number = self.c.ticket_create(t, a)
+            t_id, t_number = self.c.tc.TicketCreate(t, a)
             self.assertIsInstance(t_id, int)
             self.assertIsInstance(t_number, int)
             self.assertTrue(len(str(t_number)) >= 12)
@@ -223,11 +224,11 @@ if not MISSING_VARS:
                         Body='bla',
                         Charset='UTF8',
                         MimeType='text/plain')
-            t_id, t_number = self.c.ticket_create(t, a)
+            t_id, t_number = self.c.tc.TicketCreate(t, a)
 
             t = Ticket(Title='Foubar')
-            upd_tid, upd_tnumber = self.c.ticket_update(ticket_id=t_id,
-                                                        ticket=t)
+            upd_tid, upd_tnumber = self.c.tc.TicketUpdate(ticket_id=t_id,
+                                                          ticket=t)
             self.assertIsInstance(upd_tid, int)
             self.assertIsInstance(upd_tnumber, int)
             self.assertTrue(len(str(upd_tnumber)) >= 12)
@@ -235,7 +236,7 @@ if not MISSING_VARS:
             self.assertEqual(upd_tid, t_id)
             self.assertEqual(upd_tnumber, t_number)
 
-            upd_t = self.c.ticket_get(t_id)
+            upd_t = self.c.tc.TicketGet(t_id)
             self.assertEqual(upd_t.Title, 'Foubar')
             self.assertEqual(upd_t.Queue, 'Postmaster')
 
@@ -250,11 +251,11 @@ if not MISSING_VARS:
                         Body='bla',
                         Charset='UTF8',
                         MimeType='text/plain')
-            t_id, t_number = self.c.ticket_create(t, a)
+            t_id, t_number = self.c.tc.TicketCreate(t, a)
 
             t = Ticket(Title='Foubar')
-            upd_tid, upd_tnumber = self.c.ticket_update(ticket_number=t_number,
-                                                        ticket=t)
+            upd_tid, upd_tnumber = self.c.tc.TicketUpdate(ticket_number=t_number,
+                                                          ticket=t)
             self.assertIsInstance(upd_tid, int)
             self.assertIsInstance(upd_tnumber, int)
             self.assertTrue(len(str(upd_tnumber)) >= 12)
@@ -262,7 +263,7 @@ if not MISSING_VARS:
             self.assertEqual(upd_tid, t_id)
             self.assertEqual(upd_tnumber, t_number)
 
-            upd_t = self.c.ticket_get(t_id)
+            upd_t = self.c.tc.TicketGet(t_id)
             self.assertEqual(upd_t.Title, 'Foubar')
             self.assertEqual(upd_t.Queue, 'Postmaster')
 
@@ -277,7 +278,7 @@ if not MISSING_VARS:
                         Body='bla',
                         Charset='UTF8',
                         MimeType='text/plain')
-            t_id, t_number = self.c.ticket_create(t, a)
+            t_id, t_number = self.c.tc.TicketCreate(t, a)
 
             a2 = Article(Subject='UnitTest2',
                          Body='bla',
@@ -289,10 +290,10 @@ if not MISSING_VARS:
                          Charset='UTF8',
                          MimeType='text/plain')
 
-            self.c.ticket_update(t_id, article=a2)
-            self.c.ticket_update(t_id, article=a3)
+            self.c.tc.TicketUpdate(t_id, article=a2)
+            self.c.tc.TicketUpdate(t_id, article=a3)
 
-            t_upd = self.c.ticket_get(t_id, get_articles=True)
+            t_upd = self.c.tc.TicketGet(t_id, get_articles=True)
             arts_upd = t_upd.articles()
             self.assertIsInstance(arts_upd, list)
             self.assertEqual(len(arts_upd), 3)

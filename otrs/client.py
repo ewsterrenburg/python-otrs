@@ -179,6 +179,8 @@ class OperationBase(object):
          - list of  `OTRSObject`s: each  `OTRSObject`s in the list
            will be serialized with their `.to_xml()` (used for
            dynamic fields and attachments).
+         - list of simple types will be converted to multiple 
+           <name>value</name> elements (e.g. used for search filters)
         """
         xml_req_root = etree.Element(reqname)
 
@@ -186,12 +188,17 @@ class OperationBase(object):
             if isinstance(v, OTRSObject):
                 e = v.to_xml()
                 xml_req_root.append(e)
-            elif type(v) == list:
+            elif isinstance(v, (list, tuple)):
                 for vv in v:
-                    xml_req_root.append(vv.to_xml())
+                    if isinstance(vv, OTRSObject):
+                        e = vv.to_xml()
+                    else:
+                        e = etree.Element(k)
+                        e.text = unicode(vv)
+                    xml_req_root.append(e)
             else:
                 e = etree.Element(k)
-                e.text = str(v)
+                e.text = unicode(v)
                 xml_req_root.append(e)
 
         request = urllib2.Request(

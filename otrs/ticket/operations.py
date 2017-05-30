@@ -105,8 +105,8 @@ class TicketSearch(Ticket):
                     df_search = DynamicField(GreaterThanEquals=df.Value)
                 elif df.Operator == 'SmallerThan':
                     df_search = DynamicField(SmallerThan=df.Value)
-                elif df.Operator == 'SmallerThan':
-                    df_search = DynamicField(SmallerThan=df.Value)
+                elif df.Operator == 'SmallerThanEquals':
+                    df_search = DynamicField(SmallerThanEquals=df.Value)
                 else:
                     raise WrongOperatorException()
                 df_search.XML_NAME = 'DynamicField_{0}'.format(df.Name)

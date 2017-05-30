@@ -82,7 +82,7 @@ Create a ticket :
     att_path = r'C:\Temp\image001.png'
     mimetype = mimetypes.guess_type(att_path)[0]
     att_file = open(att_path , 'rb')
-    att_content = base64.b64encode(af1.read())
+    att_content = base64.b64encode(att_file.read())
     att1 = Attachment(Content=att_content,
                       ContentType=mimetype, Filename="image001.png")
     att_file.close()
@@ -95,7 +95,7 @@ Update an article :
 
     # changes the title of the ticket
     t_upd = Ticket(Title='Updated ticket')
-    client.tc.TicketUpdate(t_id, t_upd)
+    client.tc.TicketUpdate(t_id, ticket=t_upd)
 
     # appends a new article (attachments optional)
     new_article = Article(Subject='More info', Body='blabla', Charset='UTF8',
@@ -160,7 +160,7 @@ List FAQ Categories that have Public FAQ items in them:
     for category in catlist:
         print category.ID, category.Name
 
-Retrieve a pubblic FAQ article by ID
+Retrieve a public FAQ article by ID
 (note: FAQ Item ID is not the same as the item number!)
 
 ::

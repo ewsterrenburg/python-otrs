@@ -1,15 +1,24 @@
 """OTRS :: objects."""
 from __future__ import unicode_literals
 import base64
+from defusedxml import ElementTree as etree
 import os
 import sys
-import xml.etree.ElementTree as etree
+# defusedxml doesn't define these non-parsing related objects
+from xml.etree.ElementTree import Element
+from xml.etree.ElementTree import SubElement
+from xml.etree.ElementTree import tostring
 
-# Fix Python 2.x.
+etree.Element = _ElementType = Element
+etree.SubElement = SubElement
+etree.tostring = tostring
+
+# Fix Python 3.x.
 try:
     UNICODE_EXISTS = bool(type(unicode))
 except NameError:
     unicode = lambda s: str(s)
+
 
 class OTRSObject(object):
     """Represents an object for OTRS (mappable to an XML element)."""

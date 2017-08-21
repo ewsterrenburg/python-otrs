@@ -1,7 +1,7 @@
 """OTRS :: client."""
 import abc
 import codecs
-import defusedxml.ElementTree as etree
+from defusedxml import ElementTree as etree
 try:
     import http.client as httplib
     import urllib.request as urllib2
@@ -11,15 +11,22 @@ except ImportError:
 from otrs.objects import extract_tagname
 from otrs.objects import OTRSObject
 from posixpath import join as urljoin
-from otrs.objects import OTRSObject, extract_tagname
 import sys
-import xml.etree.ElementTree as etree
+# defusedxml doesn't define these non-parsing related objects
+from xml.etree.ElementTree import Element
+from xml.etree.ElementTree import SubElement
+from xml.etree.ElementTree import tostring
+
+etree.Element = _ElementType = Element
+etree.SubElement = SubElement
+etree.tostring = tostring
 
 # Fix Python 2.x.
 try:
     UNICODE_EXISTS = bool(type(unicode))
 except NameError:
     unicode = lambda s: str(s)
+
 
 class OTRSError(Exception):
     """Base class for OTRS Errors."""

@@ -218,7 +218,10 @@ class OperationBase(object):
                     (sys.version_info < (2, 7, 9))):
                 fd = urllib2.urlopen(request)
             else:
-                fd = urllib2.urlopen(request, context=self.ssl_context)
+                try:
+                    fd = urllib2.urlopen(request, context=self.ssl_context)
+                except TypeError:
+                    fd = urllib2.urlopen(request)
         except httplib.BadStatusLine:
             raise BadStatusLineError(request.get_full_url())
 

@@ -6,7 +6,7 @@ except ImportError:
     import urllib2
     import httplib
 from posixpath import join as urljoin
-import xml.etree.ElementTree as etree
+import defusedxml.ElementTree as etree
 from otrs.objects import OTRSObject, extract_tagname
 import codecs
 import sys
@@ -179,7 +179,7 @@ class OperationBase(object):
          - list of  `OTRSObject`s: each  `OTRSObject`s in the list
            will be serialized with their `.to_xml()` (used for
            dynamic fields and attachments).
-         - list of simple types will be converted to multiple 
+         - list of simple types will be converted to multiple
            <name>value</name> elements (e.g. used for search filters)
         """
         xml_req_root = etree.Element(reqname)

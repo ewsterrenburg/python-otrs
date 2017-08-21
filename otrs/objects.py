@@ -1,6 +1,6 @@
 """OTRS :: objects."""
 from __future__ import unicode_literals
-import xml.etree.ElementTree as etree
+import defusedxml.ElementTree as etree
 import os
 import sys
 import base64

@@ -1,3 +1,3 @@
-__author__ = 'Jocelyn Delalande'
-__email__ = 'jdelalande@oasiswork.fr'
-__version__ = '0.1.0'
+__author__ = 'Erwin Sterrenburg'
+__email__ = 'e.w.sterrenburg@gmail.com'
+__version__ = '0.4.0'

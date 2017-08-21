@@ -8,7 +8,7 @@ README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 
 setup(
     name='python-otrs',
-    version='0.3.0',
+    version='0.4.0',
     description='A programmatic interface to OTRS SOAP API.',
     long_description=README,
     author='Erwin Sterrenburg',

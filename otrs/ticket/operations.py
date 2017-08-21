@@ -1,7 +1,10 @@
 """OTRS :: ticket :: operations."""
+from otrs.client import authenticated
+from otrs.client import OperationBase
+from otrs.client import WrongOperatorException
+from otrs.objects import DynamicField
+from otrs.objects import extract_tagname
 from otrs.ticket.objects import Ticket as TicketObject
-from otrs.client import OperationBase, authenticated, WrongOperatorException
-from otrs.objects import extract_tagname, DynamicField
 
 
 class Ticket(OperationBase):

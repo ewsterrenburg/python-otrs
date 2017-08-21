@@ -1,5 +1,7 @@
 """OTRS :: faq :: objects."""
-from otrs.objects import OTRSObject, Attachment, AttachmentContainer
+from otrs.objects import Attachment
+from otrs.objects import AttachmentContainer
+from otrs.objects import OTRSObject
 
 
 class Category(OTRSObject):

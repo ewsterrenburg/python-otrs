@@ -1,8 +1,9 @@
 """OTRS :: faq :: operations."""
+from otrs.client import authenticated
+from otrs.client import OperationBase
 from otrs.faq.objects import Category as CategoryObject
-from otrs.faq.objects import Language as LanguageObject
 from otrs.faq.objects import FAQItem as FAQItemObject
-from otrs.client import OperationBase, authenticated
+from otrs.faq.objects import Language as LanguageObject
 
 
 class FAQ(OperationBase):

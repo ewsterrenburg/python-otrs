@@ -1,7 +1,10 @@
 """OTRS :: faq :: template."""
-from otrs.faq.operations import LanguageList, PublicCategoryList
-from otrs.faq.operations import PublicFAQGet, PublicFAQSearch
 from otrs.client import WebService
+from otrs.faq.operations import LanguageList
+from otrs.faq.operations import PublicCategoryList
+from otrs.faq.operations import PublicFAQGet
+from otrs.faq.operations import PublicFAQSearch
+
 
 def GenericFAQConnectorSOAP(webservice_name='GenericFAQConnectorSOAP'):
     """Return a GenericFAQConnectorSOAP Webservice object.

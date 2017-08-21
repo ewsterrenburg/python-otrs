@@ -1,16 +1,17 @@
 """OTRS :: client."""
-try:
-    import urllib.request as urllib2
-    import http.client as httplib
-except ImportError:
-    import urllib2
-    import httplib
-from posixpath import join as urljoin
-import defusedxml.ElementTree as etree
-from otrs.objects import OTRSObject, extract_tagname
-import codecs
-import sys
 import abc
+import codecs
+import defusedxml.ElementTree as etree
+try:
+    import http.client as httplib
+    import urllib.request as urllib2
+except ImportError:
+    import httplib
+    import urllib2
+from otrs.objects import extract_tagname
+from otrs.objects import OTRSObject
+from posixpath import join as urljoin
+import sys
 
 
 class OTRSError(Exception):
@@ -167,7 +168,7 @@ class OperationBase(object):
         return soap_envelope
 
     def req(self, reqname, *args, **kwargs):
-        """Wrapper arround a SOAP request.
+        """Wrapper around a SOAP request.
 
         @param reqname: the SOAP name of the request
         @param kwargs : to define the tags included in the request.
@@ -402,9 +403,12 @@ def GenericTicketConnector(server,
                            webservice_name='GenericTicketConnector',
                            ssl_context=None):
     """DEPRECATED - now calls operation of GenericTicketConnectorSOAP."""
-    from otrs.ticket.operations import TicketCreate, TicketGet
-    from otrs.ticket.operations import TicketSearch, TicketUpdate
     from otrs.session.operations import SessionCreate
+    from otrs.ticket.operations import TicketCreate
+    from otrs.ticket.operations import TicketGet
+    from otrs.ticket.operations import TicketSearch
+    from otrs.ticket.operations import TicketUpdate
+
     ticketconnector = WebService(
         webservice_name,
         'http://www.otrs.org/TicketConnector',

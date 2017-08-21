@@ -1,6 +1,9 @@
 """OTRS :: ticket :: objects."""
-from otrs.objects import OTRSObject, Attachment, DynamicField
-from otrs.objects import AttachmentContainer, DynamicFieldContainer
+from otrs.objects import Attachment
+from otrs.objects import AttachmentContainer
+from otrs.objects import DynamicField
+from otrs.objects import DynamicFieldContainer
+from otrs.objects import OTRSObject
 
 
 class Article(OTRSObject, AttachmentContainer, DynamicFieldContainer):

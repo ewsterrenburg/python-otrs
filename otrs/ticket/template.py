@@ -1,8 +1,10 @@
 """OTRS :: ticket:: template."""
-from otrs.ticket.operations import TicketCreate, TicketGet
-from otrs.ticket.operations import TicketSearch, TicketUpdate
-from otrs.session.operations import SessionCreate
 from otrs.client import WebService
+from otrs.session.operations import SessionCreate
+from otrs.ticket.operations import TicketCreate
+from otrs.ticket.operations import TicketGet
+from otrs.ticket.operations import TicketSearch
+from otrs.ticket.operations import TicketUpdate
 
 
 def GenericTicketConnectorSOAP(webservice_name='GenericTicketConnectorSOAP'):

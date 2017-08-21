@@ -5,6 +5,12 @@ import os
 import sys
 import xml.etree.ElementTree as etree
 
+# Fix Python 2.x.
+try:
+    UNICODE_EXISTS = bool(type(unicode))
+except NameError:
+    unicode = lambda s: str(s)
+
 class OTRSObject(object):
     """Represents an object for OTRS (mappable to an XML element)."""
 

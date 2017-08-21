@@ -15,6 +15,11 @@ from otrs.objects import OTRSObject, extract_tagname
 import sys
 import xml.etree.ElementTree as etree
 
+# Fix Python 2.x.
+try:
+    UNICODE_EXISTS = bool(type(unicode))
+except NameError:
+    unicode = lambda s: str(s)
 
 class OTRSError(Exception):
     """Base class for OTRS Errors."""

@@ -1,6 +1,6 @@
 import unittest
 import os
-import defusedxml.ElementTree as etree
+import xml.etree.ElementTree as etree
 
 from otrs.client import GenericInterfaceClient
 from otrs.ticket.template import GenericTicketConnectorSOAP

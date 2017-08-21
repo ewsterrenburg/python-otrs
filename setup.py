@@ -18,9 +18,7 @@ setup(
     license='GPLv3',
     zip_safe=False,
     packages=find_packages(),
-    install_requires=['defusedxml'],
     include_package_data=True,
-    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, <4',
     keywords='otrs ticket support soap interface helpdesk',
     classifiers=[
         # How mature is this project? Common values are

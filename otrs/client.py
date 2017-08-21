@@ -11,6 +11,9 @@ except ImportError:
 from otrs.objects import extract_tagname
 from otrs.objects import OTRSObject
 from posixpath import join as urljoin
+import codecs
+from otrs.objects import OTRSObject, extract_tagname
+import xml.etree.ElementTree as etree
 import sys
 
 
@@ -180,7 +183,7 @@ class OperationBase(object):
          - list of  `OTRSObject`s: each  `OTRSObject`s in the list
            will be serialized with their `.to_xml()` (used for
            dynamic fields and attachments).
-         - list of simple types will be converted to multiple
+         - list of simple types will be converted to multiple 
            <name>value</name> elements (e.g. used for search filters)
         """
         xml_req_root = etree.Element(reqname)

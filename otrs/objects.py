@@ -1,10 +1,9 @@
 """OTRS :: objects."""
 from __future__ import unicode_literals
 import base64
-import xml.etree.ElementTree as etree
 import os
 import sys
-
+import xml.etree.ElementTree as etree
 
 class OTRSObject(object):
     """Represents an object for OTRS (mappable to an XML element)."""

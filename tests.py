@@ -1,10 +1,10 @@
-import unittest
+from defusedxml import ElementTree as etree
 import os
-import xml.etree.ElementTree as etree
-
 from otrs.client import GenericInterfaceClient
+from otrs.ticket.objects import Article
+from otrs.ticket.objects import Ticket
 from otrs.ticket.template import GenericTicketConnectorSOAP
-from otrs.ticket.objects import Ticket, Article
+import unittest
 
 REQUIRED_VARS = 'OTRS_LOGIN', 'OTRS_PASSWORD', 'OTRS_SERVER', 'OTRS_WEBSERVICE'
 MISSING_VARS = []

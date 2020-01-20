@@ -1,6 +1,8 @@
 """OTRS :: client."""
 import abc
 import codecs
+import socket
+
 from defusedxml import ElementTree as etree
 try:
     import http.client as httplib
@@ -181,6 +183,11 @@ class OperationBase(object):
             '</soapenv:Envelope>'
         return soap_envelope
 
+    @property
+    def timeout(self):
+        """Return timeout of the clientobject of the WebService object."""
+        return self.getClientObjectAttribute('timeout')
+
     def req(self, reqname, *args, **kwargs):
         """Wrapper around a SOAP request.
 
@@ -223,12 +230,12 @@ class OperationBase(object):
         try:
             if ((sys.version_info[0] == 3 and sys.version_info < (3, 4, 3)) or
                     (sys.version_info < (2, 7, 9))):
-                fd = urllib2.urlopen(request)
+                fd = urllib2.urlopen(request, timeout=self.timeout)
             else:
                 try:
-                    fd = urllib2.urlopen(request, context=self.ssl_context)
+                    fd = urllib2.urlopen(request, context=self.ssl_context, timeout=self.timeout)
                 except TypeError:
-                    fd = urllib2.urlopen(request)
+                    fd = urllib2.urlopen(request, timeout=self.timeout)
         except httplib.BadStatusLine:
             raise BadStatusLineError(request.get_full_url())
 
@@ -320,7 +327,7 @@ class WebService(object):
 class GenericInterfaceClient(object):
     """Client for the OTRS Generic Interface."""
 
-    def __init__(self, server, ssl_context=None, **kwargs):
+    def __init__(self, server, ssl_context=None, timeout=None, **kwargs):
         """Initialize GenericInterfaceClient.
 
         @param server : the http(s) URL of the root installation of OTRS
@@ -342,6 +349,11 @@ class GenericInterfaceClient(object):
         self.ssl_context = ssl_context
         self.giurl = urljoin(
             server, 'otrs/nph-genericinterface.pl/Webservice/')
+
+        if timeout is None:
+            self.timeout = socket._GLOBAL_DEFAULT_TIMEOUT
+        else:
+            self.timeout = timeout
 
     def register_credentials(self, login, password):
         """Save the identifiers in memory.

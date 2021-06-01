@@ -56,7 +56,7 @@ class OTRSObject(object):
                     cls.XML_NAME, xml_element.tag))
         attrs = {}
         childs = []
-        for t in xml_element.getchildren():
+        for t in list(xml_element):
             name = extract_tagname(t)
             if name in child_tags:
                 # Complex child tags

@@ -264,7 +264,7 @@ class OperationBase(object):
         @param element : a etree.Element
         @return        : a list of etree.Element
         """
-        return element.getchildren()[0].getchildren()[0].getchildren()
+        return list(list(list(element)[0])[0])
 
     @staticmethod
     def _unpack_resp_one(element):
@@ -273,7 +273,7 @@ class OperationBase(object):
         @param element : a etree.Element
         @return        : a etree.Element (first child of the response)
         """
-        return element.getchildren()[0].getchildren()[0].getchildren()[0]
+        return list(list(list(element)[0])[0])[0]
 
     def _pack_req(self, element):
         """Pack an etree Element.

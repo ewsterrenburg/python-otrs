@@ -61,7 +61,7 @@ class SOAPError(OTRSError):
 
     def __init__(self, tag):
         """Initialize OTRS SOAPError."""
-        d = {extract_tagname(i): i.text for i in tag.getchildren()}
+        d = {extract_tagname(i): i.text for i in list(tag)}
         self.errcode = d['ErrorCode']
         self.errmsg = d['ErrorMessage']
 
@@ -349,6 +349,8 @@ class GenericInterfaceClient(object):
         self.ssl_context = ssl_context
         self.giurl = urljoin(
             server, 'otrs/nph-genericinterface.pl/Webservice/')
+
+        print("This is local python-otrs")
 
         if timeout is None:
             self.timeout = socket._GLOBAL_DEFAULT_TIMEOUT

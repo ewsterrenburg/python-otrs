@@ -61,7 +61,7 @@ class SOAPError(OTRSError):
 
     def __init__(self, tag):
         """Initialize OTRS SOAPError."""
-        d = {extract_tagname(i): i.text for i in tag.getchildren()}
+        d = {extract_tagname(i): i.text for i in list(tag)}
         self.errcode = d['ErrorCode']
         self.errmsg = d['ErrorMessage']
 
@@ -264,7 +264,7 @@ class OperationBase(object):
         @param element : a etree.Element
         @return        : a list of etree.Element
         """
-        return element.getchildren()[0].getchildren()[0].getchildren()
+        return list(list(list(element)[0])[0])
 
     @staticmethod
     def _unpack_resp_one(element):
@@ -273,7 +273,7 @@ class OperationBase(object):
         @param element : a etree.Element
         @return        : a etree.Element (first child of the response)
         """
-        return element.getchildren()[0].getchildren()[0].getchildren()[0]
+        return list(list(list(element)[0])[0])[0]
 
     def _pack_req(self, element):
         """Pack an etree Element.
@@ -349,6 +349,8 @@ class GenericInterfaceClient(object):
         self.ssl_context = ssl_context
         self.giurl = urljoin(
             server, 'otrs/nph-genericinterface.pl/Webservice/')
+
+        print("This is local python-otrs")
 
         if timeout is None:
             self.timeout = socket._GLOBAL_DEFAULT_TIMEOUT

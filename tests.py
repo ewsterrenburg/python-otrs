@@ -337,7 +337,7 @@ class TestObjects(unittest.TestCase):
     def test_ticket_to_xml(self):
         t = Ticket(State='open', Priority='3 normal', Queue='Postmaster')
         xml = t.to_xml()
-        xml_childs = xml.getchildren()
+        xml_childs = list(xml)
 
         xml_childs_dict = {i.tag: i.text for i in xml_childs}
 

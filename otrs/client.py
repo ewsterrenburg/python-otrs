@@ -350,8 +350,6 @@ class GenericInterfaceClient(object):
         self.giurl = urljoin(
             server, 'otrs/nph-genericinterface.pl/Webservice/')
 
-        print("This is local python-otrs")
-
         if timeout is None:
             self.timeout = socket._GLOBAL_DEFAULT_TIMEOUT
         else:

@@ -61,7 +61,7 @@ Then authenticate, you have three choices :
     client.tc.SessionCreate(customer_user_login='login' , password='password')
 
     # save user in memory
-    client.register_credentials(user='login', password='password')
+    client.register_credentials(login='login', password='password')
 
 Play !
 

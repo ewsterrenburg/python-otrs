@@ -64,8 +64,15 @@ class OTRSObject(object):
                 sub_obj = SubClass.from_xml(t)
                 childs.append(sub_obj)
             else:
-                # Simple child tags
-                attrs[name] = t.text
+                if name in attrs:
+                    # Multivalue child tags
+                    if type(attrs[name]) is list:
+                        attrs[name] += [t.text]
+                    else:
+                        attrs[name] = [ attrs[name], t.text ] # Convert to list
+                else:
+                    # Simple child tags
+                    attrs[name] = t.text
         obj = cls(**attrs)
 
         for i in childs:
